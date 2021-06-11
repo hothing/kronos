@@ -1,4 +1,4 @@
-#include "preCompiled.h"
+//#include "preCompiled.h"
 #include "vmConsole.h"
 #include "cO_win32.h"
 
@@ -9,21 +9,21 @@ Console::Console(int addr, int ipt) : i(0), o(0)
 {
     o = new cO_win32;
     i = new cI(addr, ipt, o);
-    if (i == null || o == null)
+    if (i == 0 || o == 0)
         delete this;
 }
 
 Console::~Console()
 {
-    if (i != null)
+    if (i != nullptr)
     {
         delete i;
-        i = null;
+        i = nullptr;
     }
-    if (o != null)
+    if (o != nullptr)
     {
         delete o;
-        o = null;
+        o = nullptr;
     }
 }
 

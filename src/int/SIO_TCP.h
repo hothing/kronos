@@ -1,4 +1,7 @@
-#pragma once
+#ifndef SIO_TCP_H
+#define SIO_TCP_H
+
+#include <cstdint>
 
 #include "SIO.h"
 
@@ -22,8 +25,8 @@ public:
     virtual void writeChar(char ch);
     virtual void onKey(bool, int, int, int) {}
 
-    int connect(dword socket);
-    int connected();
+    int connect(uint32_t socket);
+    bool connected();
 
 private:
     SIOInbound *i;
@@ -34,22 +37,23 @@ private:
 class SioTcps
 {
 public:
-    SioTcps(word port);
+    SioTcps(uint16_t port);
     virtual ~SioTcps();
 
     int addClient(SioTcp *p);
     int start();
 
-    dword Worker();
+    uint32_t Worker();
 
 private:
     enum { max_tcp = 9 };
     SioTcp *rgtcp[max_tcp];
     int N;
 
-    word port;
-    dword thread;
+    uint16_t port;
 
     SioTcp *find();
-    void serve(dword so);
+    void serve(uint32_t so);
 };
+
+#endif //SIO_TCP_H

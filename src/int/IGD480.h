@@ -1,9 +1,11 @@
-///////////////////////////////////////////////////////////////////
-// IGD480.h
-#pragma once
+#if !defined(IGD480_H)
+#define IGD480_H
+
+#include <cstdint>
 
 #include "SIO.h"
 #include "vmConsole.h"
+
 
 class MEMORY;
 class SioMouse;
@@ -101,14 +103,11 @@ struct TriangleFilled
 
 enum // mode
 {
-    rep = 0, // destinator := source
-    or  = 1, // destinator := destinator OR  source
-    xor = 2, // destinator := destinator XOR source
-    bic = 3  // destinator := destinator AND NOT source
+    mode_rep = 0, // destinator := source
+    mode_or  = 1, // destinator := destinator OR  source
+    mode_xor = 2, // destinator := destinator XOR source
+    mode_bic = 3  // destinator := destinator AND NOT source
 };
-
-
-#pragma warning (disable: 4512) // assignment operator could not be generated
 
 
 class IGD480
@@ -126,68 +125,31 @@ private:
     void* thread;
     bool  bRun;
 
-    dword dwShift;
-    dword dwLock;
+    uint32_t dwShift;
+    uint32_t dwLock;
     int   nCursor;
 
-    HWND  hWnd;
-    HWND  hStaticWnd;
+    // HWND  hWnd;
+    // HWND  hStaticWnd;
     long  lResult;
-    BYTE* pBits;
-    HDC   mdc;
-    HDC   bdc;
-    HBITMAP hBitmap;
-    HBITMAP hbmpScreen;
+    uint8_t * pBits;
+    // HDC   mdc;
+    // HDC   bdc;
+    // HBITMAP hBitmap;
+    // HBITMAP hbmpScreen;
     int   mx;   // mouse x
     int   my;   // mouse y
 
     void  refresh();
-    dword displayThread();
-    bool  wndProc(UINT msg, WPARAM wParam, LPARAM lParam);
+    uint32_t displayThread();
+    //bool  wndProc(UINT msg, WPARAM wParam, LPARAM lParam);
     void  onPaint();
     void  createWindow();
     void  createBitmap();
     void  copyBitmap();
 
-    static
-    dword __stdcall rawDisplayThread(void*);
-    static
-    LRESULT __stdcall rawWndProc(HWND, UINT, WPARAM, LPARAM);
+    // static uint32_t rawDisplayThread(void*);
+    // static LRESULT __stdcall rawWndProc(HWND, UINT, WPARAM, LPARAM);
 };
 
-/////////////////////////////////////////////////////////////////
-// mouse:
-
-class SioMouse : public SIO
-{
-public:
-    SioMouse(int addr, int ipt);
-    virtual ~SioMouse();
-
-    // SIOInbound implementation:
-    int  addr();
-    int  ipt();
-    int  inpIpt();
-    int  outIpt();
-    int  inp(int addr);
-    void out(int addr, int data);
-
-    // SIOOutbound implementation:
-    virtual int  busyRead();
-    virtual void write(char *ptr, int bytes);
-    virtual void writeChar(char ch);
-    virtual void onKey(bool, int, int, int) { }
-    
-    // IGD480 calls changeState:
-    void changeState(dword dwKeys, int dx, int dy);
-private:
-    long nIn;
-    long nOut;
-    byte buf[5*1024];
-    cI*  i;
-};
-
-
-
-//
-/////////////////////////////////////////////////////////////////
+#endif // IGD480_H

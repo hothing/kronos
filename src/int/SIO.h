@@ -1,6 +1,5 @@
-#pragma once
-
-
+#if !defined(SIO_H)
+#define SIO_H
 enum { EMPTY = 512 }; // to allow 0x00 to pass through
 
 struct SIOInbound
@@ -84,3 +83,5 @@ protected:
 private:
     void _read();
 };
+
+#endif //SIO_H

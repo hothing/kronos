@@ -1,6 +1,6 @@
-#include "preCompiled.h"
+#include <cstring>
+
 #include "Disks.h"
-#include "Memory.h"
 #include "Memory.h"
 #include "vmConsole.h"
 #include "IGD480.h"
@@ -10,14 +10,14 @@
 
 char* skipword(const char* pStr)
 {
-    while (pStr != null && *pStr != 0 && *pStr != ' ')
+    while (pStr != nullptr && *pStr != 0 && *pStr != ' ')
     {
         if (*pStr == '"')
         {
             pStr++;
             while (*pStr != 0 && *pStr != '"') pStr++;
             if (*pStr != '"')
-                return null;
+                return nullptr;
             pStr++;
         }
         else
@@ -29,21 +29,21 @@ char* skipword(const char* pStr)
 
 char* skipspaces(const char* pStr)
 {
-    while (pStr != null && *pStr == ' ')
+    while (pStr != nullptr && *pStr == ' ')
         pStr++;
     return (char*)pStr;
 }
 
 
-void AddDisks(VM& vm)
+void AddDisks(VM& vm, int argc, char ** argv)
 {
-    char* pCommandLine = GetCommandLine();
-    char *p = skipword(pCommandLine);
+    char * pCommandLine = argv[1]; //GetCommandLine();
+    char * p = skipword(pCommandLine);
     p = skipspaces(p);
-    while (p != null && *p != 0)
+    while (p != nullptr && *p != 0)
     {
         char* q = skipword(p);
-        if (q != null && *q != 0) { *q = 0; q++; }
+        if (q != nullptr && *q != 0) { *q = 0; q++; }
         if (*p == '"') p++;
         if (strlen(p) > 0 && p[strlen(p)-1] == '"') p[strlen(p)-1] = 0;
         if (strlen(p) > 0)
@@ -53,8 +53,8 @@ void AddDisks(VM& vm)
             else
                 vm.printf("disk%d \"%s\"\n", vm.Disks.GetCount()-1, p);
         }
-        if (q != null && *q != 0) p = skipspaces(q);
-        else p = null;
+        if (q != nullptr && *q != 0) p = skipspaces(q);
+        else p = nullptr;
     }
 }
 
@@ -108,34 +108,37 @@ bool ReadBooter(VM& vm)
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
     // we do not want Abort|Retry|Ignore - do we?
-    ::SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOOPENFILEERRORBOX);
+    //::SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOOPENFILEERRORBOX);
     
-    const int MemorySize = 1024*K; // 1M dword = 4MB
+    const int MemorySize = 1024*1024*4; // 1M dword = 4MB
     VM vm(MemorySize*4, &mouse, &con);
 
     AddConsole(vm);
-    AddDisks(vm);
+    AddDisks(vm, argc, argv);
 
     if (vm.Disks.GetCount() == 0)
     {
         vm.printf("Kronos3vm.exe \"XD0.dsk\" \"XD1.dsk\" ...\n");
-        while (vm.busyRead() == 0)
-            Sleep(100);
+        while (vm.busyRead() == 0) {
+          // Sleep(100);
+        }
         return 1;
     }
     if (!ReadBooter(vm))
     {
         vm.printf("failed to read booter\n");
-        while (vm.busyRead() == 0)
-            Sleep(100);
+        while (vm.busyRead() == 0) {
+            // Sleep(100);
+        }    
         return 2;
     }
     vm.Run();
     vm.printf("Kronos stopped\n");
-    while (vm.busyRead() == 0)
-        Sleep(100);
+    while (vm.busyRead() == 0) {
+        //Sleep (100);
+    }    
     return 0;
 }

@@ -1,4 +1,8 @@
-#pragma once
+#if !defined(CO_TCP_H)
+#define CO_TCP_H
+
+#include <cstdint>
+#include <sys/socket.h>
 
 #include "SIO.h"
 
@@ -11,22 +15,19 @@ public:
     virtual void writeChar(char ch);
     virtual void onKey(bool, int, int, int) {}
 
-    int connect(dword socket);
-    int connected();
+    int connect(uint32_t socket);
+    bool connected();
 
     cO_tcp();
     virtual ~cO_tcp();
 private:
-    dword so;
+
     char chInput;
 
-    // network reader thread:-
-    dword tcpReader();
-    HANDLE thread;
-    HANDLE go;
     bool reading;
 
-    static dword __stdcall tcpWorker(void *pv);
+    static uint32_t tcpWorker(void *pv);
 };
 
+#endif
 

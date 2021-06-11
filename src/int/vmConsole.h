@@ -1,4 +1,5 @@
-#pragma once
+#if !defined(CONSOLE_H)
+#define CONSOLE_H
 
 #include "SIO.h"
 
@@ -28,3 +29,5 @@ private:
     SIOInbound *i;
     SIOOutbound *o;
 };
+
+#endif // CONSOLE_H

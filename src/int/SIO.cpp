@@ -1,4 +1,7 @@
-#include "preCompiled.h"
+#include <cstddef>
+#include <cstdint>
+
+//#include "preCompiled.h"
 #include "SIO.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,7 +54,7 @@ void cI::out(int addr, int value)
     case 0: inpIptEnabled = (value & 0100) != 0;    break;
     case 1:                                         break;
     case 2: outIptEnabled = (value & 0100) != 0;    break;
-    case 3: po->writeChar((byte)value);             break;
+    case 3: po->writeChar((uint8_t)value);             break;
     }
 }
 

@@ -1,12 +1,7 @@
-//////////////////////////////////////////////////////////////////////////////
-// Memory.h  (there is NO correspondent Memory.cpp)
-//
-// Author:
-//      Dmitry ("Leo") Kuznetsov
-// Revision History
-//      Jan 18, 1998 - originated
-//      Jan 18, 2001 - moved out inline functions bodies (VC6.0 bugs)
-#pragma once
+#if !defined(MEMORY_H)
+#define MEMORY_H
+
+#include <cstdint>
 
 class IGD480;
 
@@ -49,7 +44,7 @@ private:
             inline void operator=(const reference& source);
             inline operator int() const;
             // addressing as in &mem[i]
-            inline byte* operator&() const;
+            inline uint8_t* operator&() const;
         private:
             int* p;
             MEMORY& mem;
@@ -64,8 +59,7 @@ private:
 
 
 inline MEMORY::reference::reference(int* ptr, MEMORY* m) : 
-    mem(*m),
-    p(ptr)
+    p(ptr), mem(*m)    
 {
 }
 
@@ -84,14 +78,14 @@ MEMORY::reference MEMORY::operator[](int n)
     {
 //      trace("MEMORY.OutOfRange 0x%08x\n", n);
         bOutOfRange = true;
-        return reference(null, this);
+        return reference(nullptr, this);
     }
 }
 
 
 inline void MEMORY::reference::operator=(int i)
 {
-    if (p == null)
+    if (p == nullptr)
         return;
     *p = i;
 }
@@ -99,7 +93,7 @@ inline void MEMORY::reference::operator=(int i)
 
 inline void MEMORY::reference::operator=(const MEMORY::reference& source)
 {
-    if (p == null)
+    if (p == nullptr)
         return;
     *p = int(source);
 }
@@ -107,7 +101,7 @@ inline void MEMORY::reference::operator=(const MEMORY::reference& source)
 
 inline MEMORY::reference::operator int() const
 {
-    if (p != null)
+    if (p != nullptr)
         return *p; 
     else
         return 0;
@@ -115,11 +109,12 @@ inline MEMORY::reference::operator int() const
 
 
 // addressing as in &mem[i]
-inline byte* MEMORY::reference::operator&() const
+inline uint8_t* MEMORY::reference::operator&() const
 {
-    return (byte*)p;
+    return (uint8_t*)p;
 }
 
+#endif //MEMORY_H
 
 //////////////////////////////////////////////////////////////////////////////
 // You may or may not believe me but there is no trace of "reference"

@@ -1,5 +1,13 @@
-#pragma once
+#ifndef VM_H
+#define VM_H
+
+#include <cstdint>
+
+#include "Memory.h"
+#include "IGD480.h"
+#include "Disks.h"
 #include "SIO.h"
+#include "siomouse.h"
 #include "vmConsole.h"
 
 enum {  AStackSize = 15,
@@ -14,8 +22,8 @@ public:
     virtual ~VM();
     void Run();
 
-    bool (*DiskRead)    (int diskno, int block, byte* adr, int len);
-    bool (*DiskWrite)   (int diskno, int block, byte* adr, int len);
+    bool (*DiskRead)    (int diskno, int block, uint8_t* adr, int len);
+    bool (*DiskWrite)   (int diskno, int block, uint8_t* adr, int len);
 
     MEMORY mem;
     IGD480 igd;
@@ -42,13 +50,13 @@ private:
     int Ipt;
     int AStack[AStackSize];
     int sp;
-    byte* code;
+    uint8_t* code;
 
     bool bTimer; // 20 msec interrupt source
 
     SIO *con;
 
-    byte*GetCode(int f);
+    uint8_t* GetCode(int f);
 
     inline void Push(int w);
     inline int  Pop();
@@ -69,10 +77,10 @@ private:
     void FPU();
     void Quote(int op);
 
-    void bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits);
-    void BitBlt(dword  dst, int dofs, dword  src, int sofs, int bits);
+    void bitBlt(uint32_t* dst, int dofs, uint32_t* src, int sofs, int bits);
+    void BitBlt(uint32_t  dst, int dofs, uint32_t  src, int sofs, int bits);
     void BitMove(int t, int t_o, int f, int f_o, int sz);
-    dword BBU(int adr, int i, int sz);
+    uint32_t BBU(int adr, int i, int sz);
     void  BBP(int adr, int i, int sz, int j);
 
     void _gbblt(int mode, void* des, int dofs, void* sou, int sofs, int nobits);
@@ -98,8 +106,6 @@ private:
     int  diskno;
 
     bool bDebug;
-    HANDLE hTimerThread;
-
-friend
-    ULONG __stdcall ThreadProc(void* pParam);
 };
+
+#endif //VM_H

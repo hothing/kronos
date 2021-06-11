@@ -1,4 +1,7 @@
-#pragma once
+#if !defined(CO_WIN32_H)
+#define CO_WIN32_H
+
+#include <cstdint>
 
 #include "SIO.h"
 #include "cO_win32_display.h"
@@ -17,16 +20,9 @@ public:
 
 private:
     cO_win32_display d;
-    HANDLE stdIn;
     char  szVK[8];
-
-    // keyboard stream:-
-    dword WINAPI kbdReader();
-    HANDLE thread;
-    HANDLE go;
     bool   reading;
 
-    int  decode(word vkChar);
-
-    static dword __stdcall kbdWorker(void *pv);
+    int  decode(uint16_t vkChar);
 };
+#endif

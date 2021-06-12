@@ -44,13 +44,13 @@ private:
     int Ipt;
     int AStack[AStackSize];
     int sp;
-    byte* code;
+    BYTE* code;
 
     bool bTimer; // 20 msec interrupt source
 
     SIO *con;
 
-    byte*GetCode(int f);
+    BYTE* GetCode(int f);
 
     inline void Push(int w);
     inline int  Pop();
@@ -71,10 +71,10 @@ private:
     void FPU();
     void Quote(int op);
 
-    void bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits);
-    void BitBlt(dword  dst, int dofs, dword  src, int sofs, int bits);
+    void bitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits);
+    void BitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits);
     void BitMove(int t, int t_o, int f, int f_o, int sz);
-    dword BBU(int adr, int i, int sz);
+    DWORD BBU(int adr, int i, int sz);
     void  BBP(int adr, int i, int sz, int j);
 
     void _gbblt(int mode, void* des, int dofs, void* sou, int sofs, int nobits);

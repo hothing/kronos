@@ -1,5 +1,7 @@
 #include <cstring>
 #include <cstddef>
+#include <cstdio>
+#include <cstdint>
 
 #include "cO_win32.h"
 
@@ -44,7 +46,7 @@ void cO_win32::onKey(bool bDown, int nVirtKey, int lKeyData, int ch)
     if (!::WriteConsoleInput(stdIn, &Buffer, 1, &nWritten) || nWritten < 1)
     {
         uint32_t dw = GetLastError();
-        trace("WriteConsoleInput: %d [%08X]\n", dw, dw);
+        fprintf(stderr, "WriteConsoleInput: %d [%08X]\n", dw, dw);
     }
 }
 
@@ -60,7 +62,7 @@ uint32_t WINAPI cO_win32::kbdReader()
         if (!ReadConsoleInput(stdIn, &Buffer, 1, &nRead) || nRead < 1)
         {
             uint32_t dw = GetLastError();
-            trace("ReadConsoleInput: %d [%08X]\n", dw, dw);
+            fprintf(stderr, "ReadConsoleInput: %d [%08X]\n", dw, dw);
         }
         else if ((Buffer.EventType & KEY_EVENT) != 0 && Buffer.Event.KeyEvent.bKeyDown)
         {

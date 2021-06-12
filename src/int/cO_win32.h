@@ -1,6 +1,7 @@
 #ifndef _CO_WIN32_H
 #define _CO_WIN32_H
 
+#include <windows.h>
 #include <cstdint>
 
 #include "SIO.h"

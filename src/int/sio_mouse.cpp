@@ -1,10 +1,12 @@
 #include <cstring>
 #include <cassert>
+#include <windows.h>
+#include <winnt.h>
 
 #include "sio_mouse.h"
 
 SioMouse::SioMouse(int addr, int ipt) :
-    i(new cI(addr, ipt, this)), nIn(0), nOut(0)
+    nIn(0), nOut(0), i(new cI(addr, ipt, this))
 {
     memset(buf, 0, sizeof buf);
 }
@@ -60,8 +62,8 @@ int SioMouse::busyRead()
     else
     {
         char ch = buf[out];
-        out = (out+1) % (sizeof buf);
-        ::InterlockedExchange(&nOut, out);
+        out = (out + 1) % (sizeof buf);
+        InterlockedExchange(&nOut, out);
 //      trace("SioMouse::busyRead()(%02X)\n", ch);
         return ch;
     }
@@ -91,7 +93,7 @@ void SioMouse::changeState(uint32_t dwKeys, int dx, int dy)
     if (dy >  511)
         dy =  511;
 //  trace("SioMouse::changeState(%0X, %d, %d)\n", dwKeys, dx, dy);
-    int j = nIn;
+    unsigned long j = nIn;
     long nNewIn = (nIn + 5) % (sizeof buf);
     buf[j++] = uint8_t((dwKeys & 0x7) + 0200);
     buf[j++] = uint8_t(dx & 0xFF);  dx >>= 8;

@@ -2,6 +2,8 @@
 #define _SIO_TCP_H
 
 #include <cstdint>
+#include <windows.h>
+#include <winsock2.h>
 
 #include "SIO.h"
 
@@ -25,8 +27,8 @@ public:
     virtual void writeChar(char ch);
     virtual void onKey(bool, int, int, int) {}
 
-    int connect(uint32_t socket);
-    int connected();
+    bool connect(SOCKET socket);
+    bool connected();
 
 private:
     SIOInbound *i;
@@ -41,9 +43,9 @@ public:
     virtual ~SioTcps();
 
     int addClient(SioTcp *p);
-    int start();
+    bool start();
 
-    uint32_t Worker();
+    DWORD Worker();
 
 private:
     enum { max_tcp = 9 };
@@ -51,7 +53,7 @@ private:
     int N;
 
     uint16_t port;
-    uint32_t thread;
+    HANDLE thread;
 
     SioTcp *find();
     void serve(uint32_t so);

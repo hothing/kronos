@@ -1,6 +1,8 @@
 #ifndef _CO_WIN32_DISPLAY_H
 #define _CO_WIN32_DISPLAY_H
 
+#include <windows.h>
+
 class cO_win32_display
 {
 public:
@@ -18,7 +20,7 @@ private:
     short H;
     short W;
     char  szEsc[256];
-    int   nEscCount;
+    unsigned int   nEscCount;
 
     WORD fColor; // = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
     WORD bColor; // = BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE;

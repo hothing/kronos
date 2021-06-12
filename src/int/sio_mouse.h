@@ -28,10 +28,10 @@ public:
     // IGD480 calls changeState:
     void changeState(uint32_t dwKeys, int dx, int dy);
 private:
-    long nIn;
-    long nOut;
-    uint8_t buf[5*1024];
+    LONG nIn;
+    LONG nOut;
     cI*  i;
+    uint8_t buf[5*1024];
 };
 
 #endif //_SIO_MOUSE_H

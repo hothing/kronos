@@ -4,6 +4,7 @@
 #define _IGD480_H
 
 #include <cstdint>
+#include <windows.h>
 
 #include "vmConsole.h"
 #include "Memory.h"
@@ -107,9 +108,6 @@ enum // mode
     mode_xor = 2, // destinator := destinator XOR source
     mode_bic = 3  // destinator := destinator AND NOT source
 };
-
-
-#pragma warning (disable: 4512) // assignment operator could not be generated
 
 
 class IGD480

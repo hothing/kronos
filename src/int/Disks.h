@@ -10,6 +10,7 @@
 #define _DISKS_H
 
 #include <cstdint>
+#include <windows.h>
 
 enum
 {

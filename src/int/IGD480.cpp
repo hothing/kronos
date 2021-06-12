@@ -1,6 +1,6 @@
 #include <cstring>
 #include <cassert>
-
+//#include <winuser.h>
 
 #include "Memory.h"
 #include "IGD480.h"
@@ -8,24 +8,22 @@
 #include "resource.h"
 
 IGD480::IGD480(MEMORY* m, SioMouse* sioMouse, Console* con) :
+    mem(*m), mouse(*sioMouse), console(*con),
     thread(nullptr),
     bRun(true),
-    hWnd(nullptr),
-    hBitmap(nullptr),
-    hbmpScreen(nullptr),
-    pBits(nullptr),
-    lResult(0),
-    hStaticWnd(nullptr),
-    mdc(nullptr),
-    bdc(nullptr),
     dwShift(0),
     dwLock(0xFFFFFFFF),
     nCursor(0),
-    mem(*m),
+    hWnd(nullptr),
+    hStaticWnd(nullptr),
+    lResult(0),
+    pBits(nullptr),
+    mdc(nullptr),
+    bdc(nullptr),
+    hBitmap(nullptr),
+    hbmpScreen(nullptr),
     mx(480/2),
-    my(360/2),
-    mouse(*sioMouse), 
-    console(*con)
+    my(360/2)
 {
     uint32_t id = 0;
     thread = ::CreateThread(nullptr, 0, rawDisplayThread, (void*)this, 0, &id);
@@ -86,7 +84,7 @@ uint32_t IGD480::displayThread()
         if (shift != dwShift)
         {
             dwShift = shift;
-            trace("dwShift=%08X\n", dwShift);
+            //trace("dwShift=%08X\n", dwShift);
         }
 //      mem.data[IGD480base + 0x20] &= ~0x01;   // line  sync (not necessary, faster w/o it)
         refresh();
@@ -142,8 +140,8 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_KEYDOWN: 
 //          trace("WM_KEYDOWN=%02x\n", wParam & 0xFF);
-            if (VK_PRIOR <= wParam && wParam <= VK_HELP
-            ||  VK_F1 <= wParam && wParam <= VK_F12)
+            if ((VK_PRIOR <= wParam && wParam <= VK_HELP)
+            ||  (VK_F1 <= wParam && wParam <= VK_F12))
             {
                 // we won't receive WM_CHAR on those
                 console.onKey(true, wParam, 0x00000001, wParam & 0xFF);
@@ -176,7 +174,7 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 
 
         case WM_GETICON:
-            lResult = (LRESULT)::LoadIcon(::GetModuleHandle(null), 
+            lResult = (LRESULT)::LoadIcon(::GetModuleHandle(nullptr), 
                                           MAKEINTRESOURCE(IDI_KRONOS));
             return true;
 
@@ -237,7 +235,7 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 LRESULT IGD480::rawWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     bool bProcessed = false;
-    IGD480* pThis = null;
+    IGD480* pThis = nullptr;
     if (msg == WM_CREATE)
     {
         CREATESTRUCT* pCS = (CREATESTRUCT*)lParam;
@@ -250,7 +248,7 @@ LRESULT IGD480::rawWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     else
     {
         pThis = (IGD480*)GetWindowLong(hWnd, GWL_USERDATA);
-        if (pThis != null)
+        if (pThis != nullptr)
         {
             pThis->lResult = 0;
             bProcessed = pThis->wndProc(msg, wParam, lParam);
@@ -265,7 +263,8 @@ LRESULT IGD480::rawWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void IGD480::createWindow()
 {
-    WNDCLASS cls;
+  WNDCLASS cls;
+  ATOM a;
     cls.style       = CS_VREDRAW|CS_HREDRAW;
     cls.style      &= ~CS_DBLCLKS;
     cls.lpfnWndProc = rawWndProc;
@@ -273,22 +272,25 @@ void IGD480::createWindow()
     cls.cbWndExtra = 0;
     cls.hInstance = ::GetModuleHandle(nullptr);
     cls.hIcon = ::LoadIcon(cls.hInstance, MAKEINTRESOURCE(IDI_KRONOS));
-    cls.hCursor = ::LoadCursor(null, IDC_CROSS); 
+    cls.hCursor = ::LoadCursor(nullptr, IDC_CROSS); 
     cls.hbrBackground = (HBRUSH)::GetStockObject(NULL_BRUSH);
-    cls.lpszMenuName = null;
+    cls.lpszMenuName = nullptr;
     cls.lpszClassName = "KronosIGD480";
     uint32_t dwStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
     RECT rc = {0, 0, 480, 360};
-    AdjustWindowRectEx(&rc, dwStyle, /*menu:*/false, WS_EX_APPWINDOW);
-    hWnd = ::CreateWindowEx(WS_EX_APPWINDOW,
-                            (const char*)::RegisterClass(&cls), 
-                            "Kronos Graphics",
-                            dwStyle,
-                            CW_USEDEFAULT, CW_USEDEFAULT,
-                            rc.right - rc.left, rc.bottom - rc.top,
-                            null, null, 
-                            ::GetModuleHandle(null),
-                            this);
+  AdjustWindowRectEx(&rc, dwStyle, /*menu:*/false, WS_EX_APPWINDOW);
+  a = ::RegisterClass(&cls);
+  hWnd = ::CreateWindowEx(WS_EX_APPWINDOW,
+                          cls.lpszClassName, 
+                          "Kronos Graphics",
+                          dwStyle,
+			  CW_USEDEFAULT, 
+			  CW_USEDEFAULT,
+                          rc.right - rc.left, rc.bottom - rc.top,
+			  nullptr, 
+			  nullptr, 
+                          ::GetModuleHandle(nullptr),
+                          this);
 
     HMENU hMenu = ::GetSystemMenu(hWnd, false);
     ::DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
@@ -296,11 +298,16 @@ void IGD480::createWindow()
     ::DeleteMenu(hMenu, SC_SIZE, MF_BYCOMMAND);
     ::DeleteMenu(hMenu, GetMenuItemCount(hMenu)-1, MF_BYPOSITION);
 
-    hStaticWnd = ::CreateWindow("STATIC", null, WS_CHILD|WS_VISIBLE|SS_BITMAP,
-                                    0, 0, 480, 360, hWnd, null, 
-                                    GetModuleHandle(null), null);
-    mdc = ::CreateCompatibleDC(null);
-    bdc = ::CreateCompatibleDC(null);
+  hStaticWnd = ::CreateWindow("STATIC", 
+			      nullptr, 
+			      WS_CHILD|WS_VISIBLE|SS_BITMAP, 
+			      0, 0, 480, 360, 
+			      hWnd, 
+			      nullptr, 
+			      ::GetModuleHandle(nullptr), 
+			      nullptr);
+    mdc = ::CreateCompatibleDC(nullptr);
+    bdc = ::CreateCompatibleDC(nullptr);
 }
 
 
@@ -395,7 +402,7 @@ void IGD480::copyBitmap()
 void IGD480::refresh()
 {
     MSG msg;
-    while (::PeekMessage(&msg, 0, 0, null, PM_REMOVE))
+    while (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
     {
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
@@ -417,7 +424,7 @@ void IGD480::refresh()
         ::SelectObject(bdc, hBdcSafeBmp);
         ::SelectObject(mdc, hMdcSafeBmp);
         ::InvalidateRect(hStaticWnd, nullptr, false);
-        ::InvalidateRect(hWnd, null, false);
+        ::InvalidateRect(hWnd, nullptr, false);
     }
 }
 

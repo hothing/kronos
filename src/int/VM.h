@@ -7,6 +7,7 @@
 #include "IGD480.h"
 #include "Disks.h"
 #include "SIO.h"
+#include "sio_cont.h"
 #include "siomouse.h"
 #include "vmConsole.h"
 
@@ -30,7 +31,7 @@ public:
     DISKS Disks;
     int DiskOperation(int op, int dsk, int sec, int adr, int len);
 
-    SIOs sios;
+    SIO_Controller sios;
 
     void setConsole(SIO *ps);
     int  busyRead();

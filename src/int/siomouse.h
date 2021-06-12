@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "SIO.h"
+#include "sio_gen_in.h"
 
 class SioMouse : public SIO
 {

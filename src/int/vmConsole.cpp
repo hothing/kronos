@@ -1,16 +1,17 @@
-//#include "preCompiled.h"
 #include "vmConsole.h"
-#include "cO_win32.h"
+
+#include "sio_gen_in.h"
+//#include "cO_win32.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Console.
 
 Console::Console(int addr, int ipt) : i(0), o(0)
 {
-    o = new cO_win32;
+    //o = new cO_win32;
     i = new cI(addr, ipt, o);
-    if (i == 0 || o == 0)
-        delete this;
+    // if (i == 0 || o == 0)
+    //     delete this;
 }
 
 Console::~Console()
@@ -37,5 +38,3 @@ void Console::out(int addr, int data) { i->out(addr, data); }
 int  Console::busyRead() { return o->busyRead(); }
 void Console::write(char *ptr, int bytes) { o->write(ptr, bytes); }
 void Console::writeChar(char ch) { o->writeChar(ch); }
-void Console::onKey(bool bDown, int nVirtKey, int lKeyData, int ch) 
-{ o->onKey(bDown, nVirtKey, lKeyData, ch); }

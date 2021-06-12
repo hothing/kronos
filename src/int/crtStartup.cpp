@@ -1,5 +1,3 @@
-#include "preCompiled.h"
-
 typedef void (__cdecl *_PVFV)(void);
 
 // pointers to initialization functions

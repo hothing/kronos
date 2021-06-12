@@ -4,10 +4,12 @@
 // Author:
 //      Dmitry ("Leo") Kuznetsov        LeoK@myself.com
 // Revision History
-//      Jan 20, 1998 - originated       
+//      Jan 20, 1998 - originated
 
-#pragma once
+#ifndef _DISKS_H
+#define _DISKS_H
 
+#include <cstdint>
 
 enum
 {
@@ -52,8 +54,8 @@ public:
 
     bool GetSize4KB(int n, int* adr);   // return disk size in 4KB blocks
     // both for 512 sectors, len in bytes
-    bool Read (int diskno, int sector, byte* adr, int len);
-    bool Write(int diskno, int sector, byte* adr, int len);
+    bool Read (int diskno, int sector, uint8_t* adr, int len);
+    bool Write(int diskno, int sector, uint8_t* adr, int len);
     bool GetSpecs(int n, Request* pRequest);
     bool SetSpecs(int n, Request* pRequest);
 private:
@@ -63,6 +65,10 @@ private:
     int     nDiskCount;
     char*   fName[N];
     int     nMount[N]; // number of times this disk has been mounted
-    int GetFloppySize4KB(int n, dword &SectorsPerCluster, 
-                         dword &BytesPerSector, dword &TotalNumberOfClusters);
+    int
+    GetFloppySize4KB (int n, uint32_t &SectorsPerCluster,
+                      uint32_t &BytesPerSector,
+                      uint32_t &TotalNumberOfClusters);
 };
+
+#endif //_DISKS_H

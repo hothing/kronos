@@ -6,8 +6,11 @@
 // Revision History
 //      Jan 20, 1998 - originated       
 
-#include "preCompiled.h"
-#include "DISKS.h"
+#include "Disks.h"
+
+#include <cstring>
+#include <cassert>
+#include <cstdint>
 
 DISKS::DISKS()
 {
@@ -37,7 +40,7 @@ bool DISKS::AddDisk(const char* szFileName)
     if (nDiskCount >= N)
         return false;
     fName[nDiskCount] = (char*)GlobalAllocPtr(GPTR, strlen(szFileName) + 1);
-    if (fName[nDiskCount] == INVALID_HANDLE_VALUE || fName[nDiskCount] == NULL)
+    if (fName[nDiskCount] == INVALID_HANDLE_VALUE || fName[nDiskCount] == nullptr)
         return false;
     strcpy(fName[nDiskCount], szFileName);
 
@@ -100,7 +103,7 @@ bool DISKS::Dismount(int n)
 }
 
 
-bool DISKS::Read(int n, int sectorno, byte* adr, int len)
+bool DISKS::Read(int n, int sectorno, uint8_t* adr, int len)
 {
 //  trace("read(%d, %d, %08X, %d)\n", n, sectorno, adr, len);
     bool bMount = false;
@@ -110,7 +113,7 @@ bool DISKS::Read(int n, int sectorno, byte* adr, int len)
             return false;
         bMount = true;
     }
-    dword nRead = 0;
+    uint32_t nRead = 0;
     if ((int)SetFilePointer(fDisks[n], sectorno*512, NULL, FILE_BEGIN) >= 0)
     {
         if (!ReadFile(fDisks[n], adr, len, &nRead, NULL))
@@ -122,7 +125,7 @@ bool DISKS::Read(int n, int sectorno, byte* adr, int len)
 }
 
 
-bool DISKS::Write(int n, int sectorno, byte* adr, int len)
+bool DISKS::Write(int n, int sectorno, uint8_t* adr, int len)
 {
 //  trace("write(%d, %d, %08X, %d)\n", n, sectorno, adr, len);
     bool bMount = false;
@@ -132,10 +135,10 @@ bool DISKS::Write(int n, int sectorno, byte* adr, int len)
             return false;
         bMount = true;
     }
-    dword nWritten = 0;
-    if ((int)SetFilePointer(fDisks[n], sectorno*512, NULL, FILE_BEGIN) >= 0)
+    uint32_t nWritten = 0;
+    if ((int)SetFilePointer(fDisks[n], sectorno*512, nullptr, FILE_BEGIN) >= 0)
     {
-        if (!WriteFile(fDisks[n], adr, len, &nWritten, NULL))
+        if (!WriteFile(fDisks[n], adr, len, &nWritten, nullptr))
             nWritten = 0;
     }
     if (bMount)
@@ -144,8 +147,10 @@ bool DISKS::Write(int n, int sectorno, byte* adr, int len)
 }
 
 
-int DISKS::GetFloppySize4KB(int n, dword &SectorsPerCluster, 
-                            dword &BytesPerSector, dword &TotalNumberOfClusters)
+int
+DISKS::GetFloppySize4KB (int n, uint32_t &SectorsPerCluster,
+                         uint32_t &BytesPerSector,
+                         uint32_t &TotalNumberOfClusters)
 {
     // unless we close the "\\.\A:" file and iterate   
     // direcotry on the floppy disk
@@ -166,7 +171,7 @@ int DISKS::GetFloppySize4KB(int n, dword &SectorsPerCluster,
     }
 
     int size = -1;
-    DWORD NumberOfFreeClusters = 0;
+    UINT32_T NumberOfFreeClusters = 0;
     if (::GetDiskFreeSpace("A:\\", 
         &SectorsPerCluster,
         &BytesPerSector,
@@ -193,7 +198,7 @@ bool DISKS::GetSize4KB(int n, int* adr)
             return false;
         bMount = true;
     }
-    dword dwSizeLo = 0;
+    uint32_t dwSizeLo = 0;
     if (!bFloppy[n])
     {
         dwSizeLo = GetFileSize(fDisks[n], NULL);
@@ -202,9 +207,9 @@ bool DISKS::GetSize4KB(int n, int* adr)
     }
     else
     {
-        dword SectorsPerCluster = 0;
-        dword BytesPerSector = 0;
-        dword TotalNumberOfClusters = 0;
+        uint32_t SectorsPerCluster = 0;
+        uint32_t BytesPerSector = 0;
+        uint32_t TotalNumberOfClusters = 0;
         dwSizeLo = GetFloppySize4KB(n, SectorsPerCluster, BytesPerSector, TotalNumberOfClusters);
         if (dwSizeLo != 0xFFFFFFFF)
             *adr = dwSizeLo;
@@ -219,12 +224,12 @@ bool DISKS::GetSpecs(int n, Request* pRequest)
 {
     if (!bFloppy[n])
         return false;
-    dword SectorsPerCluster = 0;
-    dword BytesPerSector = 0;
-    dword TotalNumberOfClusters = 0;
+    uint32_t SectorsPerCluster = 0;
+    uint32_t BytesPerSector = 0;
+    uint32_t TotalNumberOfClusters = 0;
     GetFloppySize4KB(n, SectorsPerCluster, BytesPerSector, TotalNumberOfClusters);
-    dword TotalNumberOfSectors = TotalNumberOfClusters * SectorsPerCluster;
-    dword TotalNumberOfBytes = TotalNumberOfSectors * BytesPerSector;
+    uint32_t TotalNumberOfSectors = TotalNumberOfClusters * SectorsPerCluster;
+    uint32_t TotalNumberOfBytes = TotalNumberOfSectors * BytesPerSector;
     pRequest->res = 0;
     pRequest->dmode = floppy | ready;
     pRequest->dsecs = TotalNumberOfSectors;
@@ -243,9 +248,9 @@ bool DISKS::GetSpecs(int n, Request* pRequest)
     pRequest->ressec = 0;
     pRequest->precomp = 0;
     pRequest->rate = 0;
-    dword dwSize = (pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector 
+    uint32_t dwSize = (pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector 
                   * pRequest->cyls * pRequest->heads;
-    unused(dwSize);
+    //unused(dwSize);
 //  trace("A: size = %d %dKB\n", dwSize, dwSize / 1024);
 //  assert((pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector
 //          * pRequest->cyls * pRequest->heads == TotalNumberOfBytes);

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _VMCONSOLE_H
+#define _VMCONSOLE_H
 
 #include "SIO.h"
 
@@ -28,3 +29,5 @@ private:
     SIOInbound *i;
     SIOOutbound *o;
 };
+
+#endif // _VMCONSOLE_H

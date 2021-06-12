@@ -1,5 +1,7 @@
-#include "preCompiled.h"
-#include <winsock2.h>
+#include <cstddef>
+
+//#include <winsock2.h>
+
 #include "cO_tcp.h"
 
 
@@ -23,14 +25,14 @@ int cO_tcp::busyRead()
 }
 
 
-dword __stdcall cO_tcp::tcpWorker(void *pv)
+uint32_t __stdcall cO_tcp::tcpWorker(void *pv)
 {
     cO_tcp *p = (cO_tcp *)pv;
     return p->tcpReader();
 }
 
 
-dword cO_tcp::tcpReader()
+uint32_t cO_tcp::tcpReader()
 {
     while (WaitForSingleObject(go, INFINITE) == WAIT_OBJECT_0)
     {
@@ -69,7 +71,7 @@ void cO_tcp::writeChar(char ch)
     write(&ch, 1);
 }
 
-int cO_tcp::connect(dword s)
+int cO_tcp::connect(uint32_t s)
 {
     if (so == INVALID_SOCKET)
         so = s;
@@ -86,14 +88,14 @@ cO_tcp::cO_tcp() : so(INVALID_SOCKET), thread(0), go(0), reading(0)
 {
     dword id;
     go = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (go == null)
+    if (go == NULL)
     {
         delete this;
         return;
     }
 
     thread = CreateThread(NULL, 4096, tcpWorker, (void *)this, 0, &id);
-    if (thread == null)
+    if (thread == NULL)
     {
         delete this;
         return;
@@ -109,10 +111,10 @@ cO_tcp::cO_tcp() : so(INVALID_SOCKET), thread(0), go(0), reading(0)
 
 cO_tcp::~cO_tcp()
 {
-    if (thread != null)
+    if (thread != NULL)
         TerminateThread(thread, 0);
-    if (thread != null)
+    if (thread != NULL)
         CloseHandle(thread);
-    if (go != null)
+    if (go != NULL)
         CloseHandle(go);
 }

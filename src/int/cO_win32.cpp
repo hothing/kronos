@@ -1,4 +1,6 @@
-#include "preCompiled.h"
+#include <cstring>
+#include <cstddef>
+
 #include "cO_win32.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,7 +23,7 @@ int cO_win32::busyRead()
 }
 
 
-dword __stdcall cO_win32::kbdWorker(void *pv)
+uint32_t __stdcall cO_win32::kbdWorker(void *pv)
 {
     cO_win32 *co = (cO_win32 *)pv;
     return co->kbdReader();
@@ -30,34 +32,34 @@ dword __stdcall cO_win32::kbdWorker(void *pv)
 
 void cO_win32::onKey(bool bDown, int nVirtKey, int lKeyData, int ch)
 {
-    DWORD nWritten = 0;
+    uint32_t nWritten = 0;
     INPUT_RECORD Buffer;
     Buffer.EventType = KEY_EVENT;
     Buffer.Event.KeyEvent.bKeyDown = bDown;
-    Buffer.Event.KeyEvent.wRepeatCount = word(lKeyData & 0xFFFF);
-    Buffer.Event.KeyEvent.wVirtualKeyCode = word(nVirtKey);
-    Buffer.Event.KeyEvent.wVirtualScanCode = word((lKeyData >> 16) & 0xFF);
-    Buffer.Event.KeyEvent.uChar.AsciiChar = byte(ch & 0xFF);
+    Buffer.Event.KeyEvent.wRepeatCount = uint16_t(lKeyData & 0xFFFF);
+    Buffer.Event.KeyEvent.wVirtualKeyCode = uint16_t(nVirtKey);
+    Buffer.Event.KeyEvent.wVirtualScanCode = uint16_t((lKeyData >> 16) & 0xFF);
+    Buffer.Event.KeyEvent.uChar.AsciiChar = uint8_t(ch & 0xFF);
     Buffer.Event.KeyEvent.dwControlKeyState = 0;
     if (!::WriteConsoleInput(stdIn, &Buffer, 1, &nWritten) || nWritten < 1)
     {
-        dword dw = GetLastError();
+        uint32_t dw = GetLastError();
         trace("WriteConsoleInput: %d [%08X]\n", dw, dw);
     }
 }
 
 
-dword WINAPI cO_win32::kbdReader()
+uint32_t WINAPI cO_win32::kbdReader()
 {
     while (WaitForSingleObject(go, INFINITE) == WAIT_OBJECT_0)
     {
         INPUT_RECORD Buffer;
-        dword nRead = 0;
+        uint32_t nRead = 0;
 
         reading = true;
         if (!ReadConsoleInput(stdIn, &Buffer, 1, &nRead) || nRead < 1)
         {
-            dword dw = GetLastError();
+            uint32_t dw = GetLastError();
             trace("ReadConsoleInput: %d [%08X]\n", dw, dw);
         }
         else if ((Buffer.EventType & KEY_EVENT) != 0 && Buffer.Event.KeyEvent.bKeyDown)
@@ -81,13 +83,13 @@ dword WINAPI cO_win32::kbdReader()
 
 cO_win32::cO_win32() :
     stdIn(0),
-    thread(null),
-    go(null),
+    thread(nullptr),
+    go(nullptr),
     reading(false)
 {
-    dword id;
+    uint32_t id;
     go = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (go == null)
+    if (go == nullptr)
     {
         delete this;
         return;
@@ -95,7 +97,7 @@ cO_win32::cO_win32() :
 
 //  trace("creating kbdReader\n");
     thread = CreateThread(NULL, 4096, kbdWorker, (void *)this, 0, &id);
-    if (thread == null)
+    if (thread == nullptr)
     {
         delete this;
         return;
@@ -110,7 +112,7 @@ cO_win32::cO_win32() :
     memset(szVK, 0, sizeof szVK);
     stdIn  = ::GetStdHandle(STD_INPUT_HANDLE);
 
-    DWORD dwMode = 0;
+    uint32_t dwMode = 0;
     GetConsoleMode(stdIn, &dwMode);
     dwMode &= ~(ENABLE_PROCESSED_INPUT|ENABLE_LINE_INPUT|
                 ENABLE_ECHO_INPUT|ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT);
@@ -127,7 +129,7 @@ cO_win32::~cO_win32()
 }
 
 
-int cO_win32::decode(word vkChar)
+int cO_win32::decode(uint16_t vkChar)
 {
     switch (vkChar)
     {

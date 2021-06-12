@@ -1,5 +1,8 @@
-#include "preCompiled.h"
-#include <winsock2.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+//#include <winsock2.h>
 #include "SIO_TCP.h"
 #include "cO_tcp.h"
 
@@ -10,21 +13,21 @@ SioTcp::SioTcp(int addr, int ipt) : i(0), o(0)
 {
     o = new cO_tcp;
     i = new cI(addr, ipt, o);
-    if (o == null || i == null)
+    if (o == nullptr || i == nullptr)
         delete this;
 }
 
 SioTcp::~SioTcp()
 {
-    if (i != null)
+    if (i != nullptr)
     {
         delete i;
-        i = null;
+        i = nullptr;
     }
-    if (o != null)
+    if (o != nullptr)
     {
         delete o;
-        o = null;
+        o = nullptr;
     }
 }
 
@@ -40,7 +43,7 @@ void SioTcp::write(char *ptr, int bytes) { o->write(ptr, bytes); }
 void SioTcp::writeChar(char ch) { o->writeChar(ch); }
 
 // Ugly, need to do something about it:-
-int SioTcp::connect(dword so) { return ((cO_tcp*)o)->connect(so); }
+int SioTcp::connect(uint32_t so) { return ((cO_tcp*)o)->connect(so); }
 int SioTcp::connected() { return ((cO_tcp*)o)->connected(); }
 
 
@@ -48,7 +51,7 @@ int SioTcp::connected() { return ((cO_tcp*)o)->connected(); }
 // SioTcps - server side
 
 
-SioTcps::SioTcps(word p) : port(p), N(0)
+SioTcps::SioTcps(uint16_t p) : port(p), N(0)
 {
 }
 
@@ -68,7 +71,7 @@ int SioTcps::addClient(SioTcp *p)
 }
 
 
-void SioTcps::serve(dword so)
+void SioTcps::serve(uint32_t so)
 {
     SioTcp *tcp = find();
 
@@ -90,7 +93,7 @@ void SioTcps::serve(dword so)
 }
 
 
-dword SioTcps::Worker(void)
+uint32_t SioTcps::Worker(void)
 {
     SOCKET so = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -143,7 +146,7 @@ trace("Kronos server exiting...\n");
 }
 
 
-dword WINAPI ServerThread(void *param)
+uint32_t WINAPI ServerThread(void *param)
 {
     SioTcps *pst = (SioTcps *)param;
     return pst->Worker();

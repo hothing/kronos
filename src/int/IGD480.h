@@ -1,12 +1,13 @@
 ///////////////////////////////////////////////////////////////////
 // IGD480.h
-#pragma once
+#ifndef _IGD480_H
+#define _IGD480_H
 
-#include "SIO.h"
+#include <cstdint>
+
 #include "vmConsole.h"
-
-class MEMORY;
-class SioMouse;
+#include "Memory.h"
+#include "sio_mouse.h"
 
 struct Bitmap
 {
@@ -101,10 +102,10 @@ struct TriangleFilled
 
 enum // mode
 {
-    rep = 0, // destinator := source
-    or  = 1, // destinator := destinator OR  source
-    xor = 2, // destinator := destinator XOR source
-    bic = 3  // destinator := destinator AND NOT source
+    mode_rep = 0, // destinator := source
+    mode_or  = 1, // destinator := destinator OR  source
+    mode_xor = 2, // destinator := destinator XOR source
+    mode_bic = 3  // destinator := destinator AND NOT source
 };
 
 
@@ -126,8 +127,8 @@ private:
     void* thread;
     bool  bRun;
 
-    dword dwShift;
-    dword dwLock;
+    uint32_t dwShift;
+    uint32_t dwLock;
     int   nCursor;
 
     HWND  hWnd;
@@ -142,7 +143,7 @@ private:
     int   my;   // mouse y
 
     void  refresh();
-    dword displayThread();
+    uint32_t displayThread();
     bool  wndProc(UINT msg, WPARAM wParam, LPARAM lParam);
     void  onPaint();
     void  createWindow();
@@ -150,44 +151,9 @@ private:
     void  copyBitmap();
 
     static
-    dword __stdcall rawDisplayThread(void*);
+    uint32_t __stdcall rawDisplayThread(void*);
     static
     LRESULT __stdcall rawWndProc(HWND, UINT, WPARAM, LPARAM);
 };
 
-/////////////////////////////////////////////////////////////////
-// mouse:
-
-class SioMouse : public SIO
-{
-public:
-    SioMouse(int addr, int ipt);
-    virtual ~SioMouse();
-
-    // SIOInbound implementation:
-    int  addr();
-    int  ipt();
-    int  inpIpt();
-    int  outIpt();
-    int  inp(int addr);
-    void out(int addr, int data);
-
-    // SIOOutbound implementation:
-    virtual int  busyRead();
-    virtual void write(char *ptr, int bytes);
-    virtual void writeChar(char ch);
-    virtual void onKey(bool, int, int, int) { }
-    
-    // IGD480 calls changeState:
-    void changeState(dword dwKeys, int dx, int dy);
-private:
-    long nIn;
-    long nOut;
-    byte buf[5*1024];
-    cI*  i;
-};
-
-
-
-//
-/////////////////////////////////////////////////////////////////
+#endif //_IGD480_H

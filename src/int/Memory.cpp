@@ -1,9 +1,10 @@
-#include "preCompiled.h"
+#include <cassert>
+
 #include "Memory.h"
 
 
 MEMORY::MEMORY(int nMemorySizeBytes) :
-    data(null),
+    data(nullptr),
     bOutOfRange(false)
 {
     nMemorySize = (nMemorySizeBytes + 3) / 4;
@@ -12,11 +13,11 @@ MEMORY::MEMORY(int nMemorySizeBytes) :
     int nSizeWithIGD = IGD480bitmap + IGD480size;
 
     // allocate none commited memory
-    byte* pReservered = null;
-    pReservered = (byte*)::VirtualAlloc(null, nSizeWithIGD * 4, MEM_RESERVE, PAGE_READWRITE);
+    uint8_t* pReservered = nullptr;
+    pReservered = (uint8_t*)::VirtualAlloc(nullptr, nSizeWithIGD * 4, MEM_RESERVE, PAGE_READWRITE);
 
     data = (int*)::VirtualAlloc(pReservered, nMemorySize*4, MEM_COMMIT,  PAGE_READWRITE);
-    assert(pReservered == (byte*)data);
+    assert(pReservered == (uint8_t*)data);
 //  trace("Memory: %08x\n", data);
 
     void* pIGDregisters = ::VirtualAlloc(pReservered + IGD480base*4, 4*K, MEM_COMMIT,  PAGE_READWRITE);
@@ -32,8 +33,8 @@ MEMORY::MEMORY(int nMemorySizeBytes) :
 MEMORY::~MEMORY()
 {
     // we do not necesseraly need VirtualFree(data) here
-    if (data != null)
+    if (data != nullptr)
         ::VirtualFree(data, 0, MEM_RELEASE);
-    data = null;
+    data = nullptr;
 }
 

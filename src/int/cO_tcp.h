@@ -1,6 +1,10 @@
-#pragma once
+#ifndef _CO_TCP_H
+#define _CO_TCP_H
+
+#include <cstdint>
 
 #include "SIO.h"
+
 
 class cO_tcp : public SIOOutbound
 {
@@ -17,16 +21,16 @@ public:
     cO_tcp();
     virtual ~cO_tcp();
 private:
-    dword so;
+    uint32_t so;
     char chInput;
 
     // network reader thread:-
-    dword tcpReader();
+    uint32_t tcpReader();
     HANDLE thread;
     HANDLE go;
     bool reading;
 
-    static dword __stdcall tcpWorker(void *pv);
+    static uint32_t __stdcall tcpWorker(void *pv);
 };
 
-
+#endif //_CO_TCP_H

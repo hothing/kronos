@@ -1,4 +1,7 @@
-#include "preCompiled.h"
+#include <cstddef>
+#include <cstring>
+#include <cassert>
+
 #include "Disks.h"
 #include "Memory.h"
 #include "IGD480.h"

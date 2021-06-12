@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _CO_WIN32_DISPLAY_H
+#define _CO_WIN32_DISPLAY_H
 
 class cO_win32_display
 {
@@ -35,3 +36,5 @@ private:
     void DeleteLines(int n);
     void ScrollScreen(int dx, int dy, SMALL_RECT *p);
 };
+
+#endif // _CO_WIN32_DISPLAY_H

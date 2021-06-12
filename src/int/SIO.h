@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _SIO_H
+#define _SIO_H
 
 
 enum { EMPTY = 512 }; // to allow 0x00 to pass through
@@ -21,7 +22,9 @@ struct SIOInbound
     virtual int  outIpt() = 0;  // interrupt request from output line
 
     virtual int  inp(int addr) = 0;
-    virtual void out(int arrd, int data) = 0;
+    virtual void out (int arrd, int data) = 0;
+
+    virtual ~SIOInbound() =0;
 };
 
 
@@ -31,7 +34,9 @@ struct SIOOutbound
     virtual int  busyRead() = 0;  // should return EMPTY if not ready
     virtual void write(char *ptr, int bytes) = 0;
     virtual void writeChar(char ch) = 0;
-    virtual void onKey(bool bDown, int nVirtKey, int lKeyData, int ch) = 0;
+    virtual void onKey (bool bDown, int nVirtKey, int lKeyData, int ch) = 0;
+
+    virtual ~SIOOutbound() =0;
 };
 
 
@@ -84,3 +89,5 @@ protected:
 private:
     void _read();
 };
+
+#endif // _SIO_H

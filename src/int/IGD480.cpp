@@ -1,22 +1,23 @@
-///////////////////////////////////////////////////////////////////
-// IGD480.cpp
-#include "preCompiled.h"
-#include "resource.h"
-#include "MEMORY.h"
+#include <cstring>
+#include <cassert>
+
+
+#include "Memory.h"
 #include "IGD480.h"
 
+#include "resource.h"
 
 IGD480::IGD480(MEMORY* m, SioMouse* sioMouse, Console* con) :
-    thread(null),
+    thread(nullptr),
     bRun(true),
-    hWnd(null),
-    hBitmap(null),
-    hbmpScreen(null),
-    pBits(null),
+    hWnd(nullptr),
+    hBitmap(nullptr),
+    hbmpScreen(nullptr),
+    pBits(nullptr),
     lResult(0),
-    hStaticWnd(null),
-    mdc(null),
-    bdc(null),
+    hStaticWnd(nullptr),
+    mdc(nullptr),
+    bdc(nullptr),
     dwShift(0),
     dwLock(0xFFFFFFFF),
     nCursor(0),
@@ -26,8 +27,8 @@ IGD480::IGD480(MEMORY* m, SioMouse* sioMouse, Console* con) :
     mouse(*sioMouse), 
     console(*con)
 {
-    dword id = 0;
-    thread = ::CreateThread(null, 0, rawDisplayThread, (void*)this, 0, &id);
+    uint32_t id = 0;
+    thread = ::CreateThread(nullptr, 0, rawDisplayThread, (void*)this, 0, &id);
     ::SetThreadPriority(thread, THREAD_PRIORITY_BELOW_NORMAL);
     // THREAD_PRIORITY_LOWEST?
     // THREAD_PRIORITY_IDLE
@@ -37,35 +38,35 @@ IGD480::IGD480(MEMORY* m, SioMouse* sioMouse, Console* con) :
 IGD480::~IGD480()
 {
     shutdown();
-    if (hBitmap != null)
+    if (hBitmap != nullptr)
     {
-        ::DeleteObject(hBitmap);    hBitmap = null;
-        ::DeleteObject(hbmpScreen); hbmpScreen = null;
-        ::DeleteDC(mdc);            mdc = null;
-        ::DeleteDC(bdc);            bdc = null;
+        ::DeleteObject(hBitmap);    hBitmap = nullptr;
+        ::DeleteObject(hbmpScreen); hbmpScreen = nullptr;
+        ::DeleteDC(mdc);            mdc = nullptr;
+        ::DeleteDC(bdc);            bdc = nullptr;
     }
-    pBits = null;
+    pBits = nullptr;
 }
 
 
 
-dword IGD480::displayThread()
+uint32_t IGD480::displayThread()
 {
     while (bRun)
     {
         ::Sleep(20); // ~50 frames per second
-        dword shift = mem.data[IGD480base + 0x00] & ~0x1;
-        dword lock = mem.data[IGD480base + 0x0F];
+        uint32_t shift = mem.data[IGD480base + 0x00] & ~0x1;
+        uint32_t lock = mem.data[IGD480base + 0x0F];
         if (lock != dwLock)
         {
 //          trace("lock=%d\n", lock);
             dwLock = lock;
-            if (hWnd == null)
+            if (hWnd == nullptr)
             {
                 createWindow();
                 createBitmap();
             }
-            if (hWnd != null)
+            if (hWnd != nullptr)
             {
                 ::ShowWindow(hWnd, dwLock ? SW_SHOW : SW_HIDE);
                 if (dwLock)
@@ -100,21 +101,21 @@ dword IGD480::displayThread()
 void IGD480::shutdown()
 {
     bRun = false;
-    if (thread != null)
+    if (thread != nullptr)
     {
         ::WaitForSingleObject(thread, 1000);
-        ::CloseHandle(thread);  thread = null;
+        ::CloseHandle(thread);  thread = nullptr;
     }
-    if (hWnd != null)
+    if (hWnd != nullptr)
     {
-        ::DestroyWindow(hWnd);  hWnd = null;
+        ::DestroyWindow(hWnd);  hWnd = nullptr;
         ::Sleep(200);
     }
 }
 
 
 
-dword IGD480::rawDisplayThread(void* pvThis)
+uint32_t IGD480::rawDisplayThread(void* pvThis)
 {
     IGD480* pThis = (IGD480*)pvThis;
     return pThis->displayThread();
@@ -161,7 +162,7 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOMMAND: 
         {
-            dword uCommand = wParam & ~0xF;
+            uint32_t uCommand = wParam & ~0xF;
             if (uCommand == SC_MOVE
             ||  uCommand == SC_MINIMIZE
             ||  uCommand == SC_RESTORE)
@@ -195,7 +196,7 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_MBUTTONUP:
         case WM_MOUSEMOVE:
         {
-            dword dwKeys = wParam;      // key flags 
+            uint32_t dwKeys = wParam;      // key flags 
             int xPos = LOWORD(lParam);  // horizontal position of cursor 
             int yPos = HIWORD(lParam);  // vertical position of cursor 
             RECT rc;
@@ -215,7 +216,7 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
             else
             {
             }
-            dword dwState = 0;
+            uint32_t dwState = 0;
             dwState |= (dwKeys & MK_LBUTTON) ? 0x1 : 0x0;
             dwState |= (dwKeys & MK_RBUTTON) ? 0x2 : 0x0;
             dwState |= (dwKeys & MK_MBUTTON) ? 0x4 : 0x0;
@@ -270,13 +271,13 @@ void IGD480::createWindow()
     cls.lpfnWndProc = rawWndProc;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
-    cls.hInstance = ::GetModuleHandle(null);
+    cls.hInstance = ::GetModuleHandle(nullptr);
     cls.hIcon = ::LoadIcon(cls.hInstance, MAKEINTRESOURCE(IDI_KRONOS));
     cls.hCursor = ::LoadCursor(null, IDC_CROSS); 
     cls.hbrBackground = (HBRUSH)::GetStockObject(NULL_BRUSH);
     cls.lpszMenuName = null;
     cls.lpszClassName = "KronosIGD480";
-    dword dwStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
+    uint32_t dwStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
     RECT rc = {0, 0, 480, 360};
     AdjustWindowRectEx(&rc, dwStyle, /*menu:*/false, WS_EX_APPWINDOW);
     hWnd = ::CreateWindowEx(WS_EX_APPWINDOW,
@@ -341,8 +342,8 @@ void IGD480::copyBitmap()
     int ldcy = ((dwShift / 0x400) / 0x200) % 512;
     int ldcx = ((dwShift / 0x400) % 0x200) % 512;
 
-    dword* pal = (dword*)(byte*)&mem[IGD480base + 0x10];
-    byte palette[16][3];
+    uint32_t* pal = (uint32_t*)(byte*)&mem[IGD480base + 0x10];
+    uint8_t palette[16][3];
     for (int i = 0; i < 16; i++)
     {
         assert(ptrans[ptrans[i]] == i);
@@ -353,9 +354,9 @@ void IGD480::copyBitmap()
         r = (r == 0 ? 0 : (r+1) * 64 - 1);
         g = (g == 0 ? 0 : (g+1) * 64 - 1);
         b = (b == 0 ? 0 : (b+1) * 64 - 1);
-        palette[i][0] = (byte)r;
-        palette[i][1] = (byte)g;
-        palette[i][2] = (byte)b;
+        palette[i][0] = (uint8_t)r;
+        palette[i][1] = (uint8_t)g;
+        palette[i][2] = (uint8_t)b;
     }
     const int wpl = 512 / 32;
 
@@ -365,10 +366,10 @@ void IGD480::copyBitmap()
         for (int i = 0; i < 480 / 32; i++)
         {
             int Y = (ldcy + y) % 512;
-            dword w0 = mem[IGD480bitmap + (Y + 0*512) * wpl + ldcx / 32 + i];
-            dword w1 = mem[IGD480bitmap + (Y + 1*512) * wpl + ldcx / 32 + i];
-            dword w2 = mem[IGD480bitmap + (Y + 2*512) * wpl + ldcx / 32 + i];
-            dword w3 = mem[IGD480bitmap + (Y + 3*512) * wpl + ldcx / 32 + i];
+            uint32_t w0 = mem[IGD480bitmap + (Y + 0*512) * wpl + ldcx / 32 + i];
+            uint32_t w1 = mem[IGD480bitmap + (Y + 1*512) * wpl + ldcx / 32 + i];
+            uint32_t w2 = mem[IGD480bitmap + (Y + 2*512) * wpl + ldcx / 32 + i];
+            uint32_t w3 = mem[IGD480bitmap + (Y + 3*512) * wpl + ldcx / 32 + i];
             for (int j = 0; j < 32; j++)
             {
                 int n = 
@@ -415,115 +416,8 @@ void IGD480::refresh()
         ::SetStretchBltMode(bdc, nOldStretchMode);
         ::SelectObject(bdc, hBdcSafeBmp);
         ::SelectObject(mdc, hMdcSafeBmp);
-        ::InvalidateRect(hStaticWnd, null, false);
+        ::InvalidateRect(hStaticWnd, nullptr, false);
         ::InvalidateRect(hWnd, null, false);
     }
 }
 
-
-#pragma warning(disable: 4355) // 'this' : used in base member initializer list
-
-SioMouse::SioMouse(int addr, int ipt) :
-    i(new cI(addr, ipt, this)), nIn(0), nOut(0)
-{
-    memset(buf, 0, sizeof buf);
-}
-
-#pragma warning(default: 4355) // 'this' : used in base member initializer list
-
-SioMouse::~SioMouse()
-{
-    delete i;
-}
-
-
-int  SioMouse::addr()
-{
-    return i->addr();
-}
-
-
-int  SioMouse::ipt()
-{
-    return i->ipt();
-}
-
-
-int  SioMouse::inpIpt()
-{
-    return i->inpIpt();
-}
-
-
-int  SioMouse::outIpt()
-{
-    return i->outIpt();
-}
-
-
-int  SioMouse::inp(int addr)
-{
-    return i->inp(addr);
-}
-
-
-void SioMouse::out(int addr, int data)
-{
-    i->out(addr, data);
-}
-
-
-int SioMouse::busyRead()
-{
-    int in = nIn;
-    int out = nOut;
-    if (in == out)
-        return EMPTY;
-    else
-    {
-        char ch = buf[out];
-        out = (out+1) % (sizeof buf);
-        ::InterlockedExchange(&nOut, out);
-//      trace("SioMouse::busyRead()(%02X)\n", ch);
-        return ch;
-    }
-}
-
-
-void SioMouse::write(char*, int)
-{
-    // nothing
-}
-
-
-void SioMouse::writeChar(char)
-{
-    // nothing
-}
-
-void SioMouse::changeState(dword dwKeys, int dx, int dy)
-{
-//  trace("mouse.changeState(%d %d)\n", dx, dy);
-    if (dx < -512)
-        dx = -512;
-    if (dy < -512)
-        dy = -512;
-    if (dx >  511)
-        dx =  511;
-    if (dy >  511)
-        dy =  511;
-//  trace("SioMouse::changeState(%0X, %d, %d)\n", dwKeys, dx, dy);
-    int j = nIn;
-    long nNewIn = (nIn + 5) % (sizeof buf);
-    buf[j++] = byte((dwKeys & 0x7) + 0200);
-    buf[j++] = byte(dx & 0xFF);  dx >>= 8;
-    buf[j++] = byte(dy & 0xFF);  dy >>= 8;
-    buf[j++] = byte(dx & 0xFF);
-    buf[j++] = byte(dy & 0xFF);
-    assert(j <= sizeof buf);
-    ::InterlockedExchange(&nIn, nNewIn);
-}
-
-
-//
-/////////////////////////////////////////////////////////////////

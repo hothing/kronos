@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _VM_H
+#define _VM_H
+
 #include "SIO.h"
 #include "vmConsole.h"
 
@@ -103,3 +105,5 @@ private:
 friend
     ULONG __stdcall ThreadProc(void* pParam);
 };
+
+#endif //_VM_H

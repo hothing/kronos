@@ -1,7 +1,15 @@
 #ifndef _VM_H
 #define _VM_H
 
+#include <cstdint>
+#include <cstddef>
+#include <windows.h>
+
+#include "Memory.h"
+#include "IGD480.h"
+#include "Disks.h"
 #include "SIO.h"
+#include "sio_mouse.h"
 #include "vmConsole.h"
 
 enum {  AStackSize = 15,
@@ -72,7 +80,7 @@ private:
     void Quote(int op);
 
     void bitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits);
-    void BitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits);
+    void BitBlt(DWORD  dst, int dofs, DWORD  src, int sofs, int bits);
     void BitMove(int t, int t_o, int f, int f_o, int sz);
     DWORD BBU(int adr, int i, int sz);
     void  BBP(int adr, int i, int sz, int j);

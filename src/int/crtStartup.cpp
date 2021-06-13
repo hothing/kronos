@@ -1,3 +1,5 @@
+#ifdef _MSVC
+
 typedef void (__cdecl *_PVFV)(void);
 
 // pointers to initialization functions
@@ -336,3 +338,4 @@ _allmul_hard:
 }
 
 };
+#endif // _MSVC

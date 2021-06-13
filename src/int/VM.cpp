@@ -240,7 +240,7 @@ void VM::Trap(int no)
 }
 
 
-void VM::bitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits)
+void VM::bitBlt(DWORD * dst, int dofs, DWORD  * src, int sofs, int bits)
 {
     assert(dofs >= 0 && dofs < 32);
     assert(sofs >= 0 && sofs < 32);
@@ -312,7 +312,7 @@ void VM::bitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits)
 }
 
 
-void VM::BitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits)
+void VM::BitBlt(DWORD dst, int dofs, DWORD src, int sofs, int bits)
 {
     if (bits < 0 || dofs < 0 || sofs < 0)
     {
@@ -2002,8 +2002,8 @@ void VM::printf(const char* fmt, ...)
     char buf[1024];
     va_list vl;
     va_start(vl, fmt); 
-    wvsprintf(buf, fmt, vl);
-
+    wvsprintf(buf, fmt, va_arg(vl, char *));
+    va_end(vl);
     con->write(buf, strlen(buf));
 }
 

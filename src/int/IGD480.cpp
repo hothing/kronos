@@ -7,6 +7,10 @@
 
 #include "resource.h"
 
+#ifndef GWL_USERDATA
+#define GWL_USERDATA (-21)
+#endif
+
 IGD480::IGD480(MEMORY* m, SioMouse* sioMouse, Console* con) :
     mem(*m), mouse(*sioMouse), console(*con),
     thread(nullptr),
@@ -229,8 +233,6 @@ bool IGD480::wndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     }
     return false;
 }
-
-
 
 LRESULT IGD480::rawWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

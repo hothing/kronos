@@ -12,6 +12,8 @@
 #include <cassert>
 #include <cstdint>
 
+#define KiB (1024)
+
 DISKS::DISKS()
 {
     for (int i = 0; i < N; i++)
@@ -27,7 +29,7 @@ DISKS::~DISKS()
 {
     for (int i = 0; i < nDiskCount; ++i)
     {
-        GlobalFreePtr(fName[i]);
+        ::GlobalFree(fName[i]);
         fName[i] = NULL;
         nMount[i] = 0;
         Dismount(i);
@@ -39,7 +41,7 @@ bool DISKS::AddDisk(const char* szFileName)
 {
     if (nDiskCount >= N)
         return false;
-    fName[nDiskCount] = (char*)GlobalAllocPtr(GPTR, strlen(szFileName) + 1);
+    fName[nDiskCount] = (char*)GlobalAlloc(GPTR, strlen(szFileName) + 1);
     if (fName[nDiskCount] == INVALID_HANDLE_VALUE || fName[nDiskCount] == nullptr)
         return false;
     strcpy(fName[nDiskCount], szFileName);
@@ -171,7 +173,7 @@ DISKS::GetFloppySize4KB (int n, uint32_t &SectorsPerCluster,
     }
 
     int size = -1;
-    UINT32_T NumberOfFreeClusters = 0;
+    UINT NumberOfFreeClusters = 0;
     if (::GetDiskFreeSpace("A:\\", 
         &SectorsPerCluster,
         &BytesPerSector,
@@ -179,7 +181,7 @@ DISKS::GetFloppySize4KB (int n, uint32_t &SectorsPerCluster,
         &TotalNumberOfClusters))
     {
         size = TotalNumberOfClusters * SectorsPerCluster * BytesPerSector;
-        size = (int)(size / (4*K));
+        size = (int)(size / (4*KiB));
     }
     else
         size = -1;
@@ -203,7 +205,7 @@ bool DISKS::GetSize4KB(int n, int* adr)
     {
         dwSizeLo = GetFileSize(fDisks[n], NULL);
         if (dwSizeLo != 0xFFFFFFFF)
-            *adr = (int)(dwSizeLo / (4*K));
+            *adr = (int)(dwSizeLo / (4*KiB));
     }
     else
     {
@@ -248,8 +250,8 @@ bool DISKS::GetSpecs(int n, Request* pRequest)
     pRequest->ressec = 0;
     pRequest->precomp = 0;
     pRequest->rate = 0;
-    uint32_t dwSize = (pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector 
-                  * pRequest->cyls * pRequest->heads;
+    //uint32_t dwSize = (pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector 
+    //              * pRequest->cyls * pRequest->heads;
     //unused(dwSize);
 //  trace("A: size = %d %dKB\n", dwSize, dwSize / 1024);
 //  assert((pRequest->maxsec - pRequest->minsec + 1) * BytesPerSector

@@ -1,15 +1,12 @@
 #include <cstddef>
-
-//#include <winsock2.h>
+#include <windows.h>
 
 #include "cO_tcp.h"
 
 
-// SIOOutbound methods:
 int cO_tcp::busyRead()
 {
-    if (!connected())
-        return EMPTY;
+    if (!connected()) return EMPTY;
 
     int ch = EMPTY;
 
@@ -18,21 +15,20 @@ int cO_tcp::busyRead()
         ch = chInput;
         chInput = 0;
     }
-    else if (!reading)
-        SetEvent(go);
+    else if (!reading) SetEvent(go);
 
     return ch;
 }
 
 
-uint32_t __stdcall cO_tcp::tcpWorker(void *pv)
+DWORD __stdcall cO_tcp::tcpWorker(void *pv)
 {
     cO_tcp *p = (cO_tcp *)pv;
     return p->tcpReader();
 }
 
 
-uint32_t cO_tcp::tcpReader()
+DWORD cO_tcp::tcpReader()
 {
     while (WaitForSingleObject(go, INFINITE) == WAIT_OBJECT_0)
     {
@@ -42,12 +38,8 @@ uint32_t cO_tcp::tcpReader()
 
         int err = recv(so, &ch, 1, 0);
 
-        if (err == SOCKET_ERROR)
-        {
-            so = INVALID_SOCKET;
-        }
-        else
-            chInput = ch;
+        if (err == SOCKET_ERROR) { so = INVALID_SOCKET; }
+        else { chInput = ch; }
 
         reading = false;
     }
@@ -57,13 +49,9 @@ uint32_t cO_tcp::tcpReader()
 
 void cO_tcp::write(char *ptr, int bytes)
 {
-    if (!connected())
-        return;
-
+    if (!connected()) return;
     int err = send(so, ptr, bytes, 0);
-
-    if (err == SOCKET_ERROR)
-        so = INVALID_SOCKET;
+    if (err == SOCKET_ERROR) { so = INVALID_SOCKET; }
 }
 
 void cO_tcp::writeChar(char ch)
@@ -71,7 +59,7 @@ void cO_tcp::writeChar(char ch)
     write(&ch, 1);
 }
 
-int cO_tcp::connect(uint32_t s)
+bool cO_tcp::connect(SOCKET s)
 {
     if (so == INVALID_SOCKET)
         so = s;
@@ -79,14 +67,14 @@ int cO_tcp::connect(uint32_t s)
     return so == s;
 }
 
-int cO_tcp::connected()
+bool cO_tcp::connected()
 {
     return so != INVALID_SOCKET;
 }
 
 cO_tcp::cO_tcp() : so(INVALID_SOCKET), thread(0), go(0), reading(0)
 {
-    dword id;
+    DWORD id;
     go = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (go == NULL)
     {
@@ -111,10 +99,7 @@ cO_tcp::cO_tcp() : so(INVALID_SOCKET), thread(0), go(0), reading(0)
 
 cO_tcp::~cO_tcp()
 {
-    if (thread != NULL)
-        TerminateThread(thread, 0);
-    if (thread != NULL)
-        CloseHandle(thread);
-    if (go != NULL)
-        CloseHandle(go);
+    if (thread != NULL) TerminateThread(thread, 0);
+    if (thread != NULL) CloseHandle(thread);
+    if (go != NULL) CloseHandle(go);
 }

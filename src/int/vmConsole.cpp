@@ -38,5 +38,4 @@ void Console::out(int addr, int data) { i->out(addr, data); }
 int  Console::busyRead() { return o->busyRead(); }
 void Console::write(char *ptr, int bytes) { o->write(ptr, bytes); }
 void Console::writeChar(char ch) { o->writeChar(ch); }
-void Console::onKey(bool bDown, int nVirtKey, int lKeyData, int ch) 
-{ o->onKey(bDown, nVirtKey, lKeyData, ch); }
+void Console::onKey(bool bDown, int nVirtKey, int lKeyData, int ch) { o->onKey(bDown, nVirtKey, lKeyData, ch); }

@@ -35,7 +35,7 @@ ULONG __stdcall ThreadProc(void* pParam)
 }
 
 
-static dword lnFF[64]; // enough for width=1920
+static DWORD lnFF[64]; // enough for width=1920
 
 
 VM::VM(int nMemorySizeBytes, SioMouse* mouse, Console* con) : 
@@ -54,15 +54,15 @@ VM::VM(int nMemorySizeBytes, SioMouse* mouse, Console* con) :
     IR = 0;
     PCs = 0;
     Ipt = 0;
-    code = (byte*)&mem[0];
+    code = (uint8_t*)&mem[0];
     memset(&AStack, 0, sizeof AStack);
     bTimer = false;
     hTimerThread = NULL;
 
     diskno = 0;
     
-    dword id = 0;
-    hTimerThread = CreateThread(null,  0, ThreadProc, this, 0, &id);
+    DWORD id = 0;
+    hTimerThread = CreateThread(nullptr,  0, ThreadProc, this, 0, &id);
     SetThreadPriority(hTimerThread, THREAD_PRIORITY_TIME_CRITICAL);
     memset(lnFF, 0xFFFFFFFF, sizeof lnFF);
 }
@@ -74,17 +74,17 @@ VM::~VM()
 }
 
 
-byte* VM::GetCode(int f)
+uint8_t* VM::GetCode(int f)
 {
     if (f < 0 || f > mem.GetSize())
         Ipt = 3;
-    return (byte*)&mem[f % mem.GetSize()];
+    return (uint8_t*)&mem[f % mem.GetSize()];
 }
 
 
 inline int VM::Next()
 {
-    return ((byte*)code)[PC++];
+    return ((uint8_t*)code)[PC++];
 }
 
 
@@ -92,14 +92,14 @@ inline int VM::Next2()
 {
     int pc = PC;
     PC += 2;
-    return *((word*)&((byte*)code)[pc]);
+    return *((WORD*)&((BYTE*)code)[pc]);
 }
 
 inline int VM::Next4()
 {
     int pc = PC;
     PC += 4;
-    return *((int*)&((byte*)code)[pc]);
+    return *((int*)&((uint8_t*)code)[pc]);
 }
 
 
@@ -226,7 +226,7 @@ void VM::Trap(int no)
         {
             if (no != 3) // booter use Ipt 3 to determine memory size
             {
-                trace("Unexpected interrupt %02x.\n", no);
+                //trace("Unexpected interrupt %02x.\n", no);
                 bDebug = true;
             }
             return;
@@ -240,7 +240,7 @@ void VM::Trap(int no)
 }
 
 
-void VM::bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits)
+void VM::bitBlt(DWORD * dst, int dofs, DWORD  * src, int sofs, int bits)
 {
     assert(dofs >= 0 && dofs < 32);
     assert(sofs >= 0 && sofs < 32);
@@ -251,7 +251,7 @@ void VM::bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits)
 
     if (sofs % 8 == 0 && dofs % 8 == 0 && bits % 8 == 0)
     {
-        memcpy((byte*)dst + dofs / 8, (byte*)src + sofs / 8, bits / 8);
+        memcpy((uint8_t*)dst + dofs / 8, (uint8_t*)src + sofs / 8, bits / 8);
         return;
     }
 
@@ -259,7 +259,7 @@ void VM::bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits)
     {
         // copy first 32-ofs bits and advance
         int n = min(bits, 32 - dofs);
-        dword mask = ((1U << n) - 1) << dofs;
+        DWORD mask = ((1U << n) - 1) << dofs;
         *dst &= ~mask;
         *dst |= *src & mask;
         bits -= n;
@@ -280,31 +280,31 @@ void VM::bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits)
         // copy last bits % 32
         dst += n;
         src += n;
-        dword mask = (1U << m) - 1;
+        DWORD mask = (1U << m) - 1;
         *dst &= ~mask;
         *dst |= *src & mask;
         return;
     }
 
-    int n = dofs - sofs;
+    uint64_t n = dofs - sofs;
     assert(n != 0);
-    qword* pd = (qword*)dst;
-    qword* ps = (qword*)src;
+    uint64_t* pd = (uint64_t*)dst;
+    uint64_t* ps = (uint64_t*)src;
     while (bits >= 32)
     {
-        qword mask = qword(0xFFFFFFFF) << dofs;
-        qword s = *ps;
+        uint64_t mask = uint64_t(0xFFFFFFFF) << dofs;
+        uint64_t s = *ps;
         s = n < 0 ? (s >> -n) : (s << n);
         *pd &= ~mask;
         *pd |= s & mask;
-        pd = (qword*)(++dst);
-        ps = (qword*)(++src);
+        pd = (uint64_t*)(++dst);
+        ps = (uint64_t*)(++src);
         bits -= 32;
     }
     if (bits > 0)
     {
-        qword mask = qword(((1U << bits) - 1)) << dofs;
-        qword s = *ps;
+        uint64_t mask = uint64_t(((1U << bits) - 1)) << dofs;
+        uint64_t s = *ps;
         s = n < 0 ? (s >> -n) : (s << n);
         *pd &= ~mask;
         *pd |= s & mask;
@@ -312,33 +312,33 @@ void VM::bitBlt(dword* dst, int dofs, dword* src, int sofs, int bits)
 }
 
 
-void VM::BitBlt(dword dst, int dofs, dword src, int sofs, int bits)
+void VM::BitBlt(DWORD dst, int dofs, DWORD src, int sofs, int bits)
 {
     if (bits < 0 || dofs < 0 || sofs < 0)
     {
         Ipt = 0x4A; 
         return;
     }
-    dword  test = mem[dst] 
-                | mem[src]
-                | mem[dst + ((dofs + bits + 31) >> 5)]
-                | mem[src + ((sofs + bits + 31) >> 5)];
-    unused(test);
+/*     DWORD  test = mem[dst]  */
+/*                 | mem[src] */
+/*                 | mem[dst + ((dofs + bits + 31) >> 5)] */
+/*                 | mem[src + ((sofs + bits + 31) >> 5)]; */
+/*     unused(test); */
     if (mem.OutOfRange())
     {
         Ipt = 3;
         return;
     }
-    dword* pdst = (dword*)(const byte*)&mem[dst + (dofs >> 5)];
-    dword* psrc = (dword*)(const byte*)&mem[src + (sofs >> 5)];
+    DWORD* pdst = (DWORD*)(const uint8_t*)&mem[dst + (dofs >> 5)];
+    DWORD* psrc = (DWORD*)(const uint8_t*)&mem[src + (sofs >> 5)];
     bitBlt(pdst, dofs & 0x1F, psrc, sofs & 0x1F, bits);
 }
 
 static
 void* memmove(void* _dst, void* _src, size_t count)
 {
-    byte* dst = (byte*)_dst;
-    byte* src = (byte*)_src;
+    uint8_t* dst = (uint8_t*)_dst;
+    uint8_t* src = (uint8_t*)_src;
     if (dst <= src || dst >= (src + count)) // Non-Overlapping Buffers 
     {
         memcpy(dst, src, count);
@@ -355,11 +355,11 @@ void* memmove(void* _dst, void* _src, size_t count)
 
 void VM::BitMove(int dst, int _dofs, int src, int _sofs, int bits)
 {
-    dword  test = mem[dst] 
-                | mem[src]
-                | mem[dst + ((_dofs + bits + 31) >> 5)]
-                | mem[src + ((_sofs + bits + 31) >> 5)];
-    unused(test);
+/*     DWORD  test = mem[dst]  */
+/*                 | mem[src] */
+/*                 | mem[dst + ((_dofs + bits + 31) >> 5)] */
+/*                 | mem[src + ((_sofs + bits + 31) >> 5)]; */
+/*     unused(test); */
     if (mem.OutOfRange())
     {
         Ipt = 3;
@@ -369,8 +369,8 @@ void VM::BitMove(int dst, int _dofs, int src, int _sofs, int bits)
     src = src + (_sofs >> 5);
     int dofs = _dofs & 0x1F;
     int sofs = _sofs & 0x1F;
-    qlong qdst = (qlong(dst) << 5) + _dofs;
-    qlong qsrc = (qlong(src) << 5) + _sofs;
+    int64_t qdst = (int64_t(dst) << 5) + _dofs;
+    int64_t qsrc = (int64_t(src) << 5) + _sofs;
 
     if (qdst <= qsrc || qdst >= (qsrc + bits)) // Non-Overlapping Buffers 
     {
@@ -379,14 +379,14 @@ void VM::BitMove(int dst, int _dofs, int src, int _sofs, int bits)
     }
     if ((sofs & 0x7) == 0 && (dofs & 0x7) == 0 && (bits & 0x7) == 0)
     {
-        memmove((byte*)&mem[dst] + (dofs >> 3), (byte*)&mem[src] + (sofs >> 3), bits >> 3);
+        memmove((uint8_t*)&mem[dst] + (dofs >> 3), (uint8_t*)&mem[src] + (sofs >> 3), bits >> 3);
         return;
     }
 
     dofs += bits - 1;
     sofs += bits - 1;
-    dword* pdst = (dword*)(byte*)&mem[dst];
-    dword* psrc = (dword*)(byte*)&mem[src];
+    DWORD* pdst = (DWORD*)(uint8_t*)&mem[dst];
+    DWORD* psrc = (DWORD*)(uint8_t*)&mem[src];
     for (int k = 0; k < bits; k++)
     {
         if (psrc[sofs >> 5] & (1U << (sofs & 0x1F)))
@@ -406,11 +406,11 @@ void VM::_gbblt(int mode, void* des, int dofs, void* sou, int sofs, int sz)
         Ipt = 0x4A;
         return;
     }
-    dword* t_p = (dword*)des;
-    dword* f_p = (dword*)sou;
+    DWORD* t_p = (DWORD*)des;
+    DWORD* f_p = (DWORD*)sou;
     switch (mode % 4)
     {
-        case rep: 
+        case mode_rep: 
             while (sz > 0)
             {
                 if ((1U << (sofs & 0x1F)) & f_p[sofs >> 5])
@@ -420,7 +420,7 @@ void VM::_gbblt(int mode, void* des, int dofs, void* sou, int sofs, int sz)
                 sofs++;  dofs++; sz--;
             }
             break;
-        case xor:
+        case mode_xor:
             while (sz > 0)
             {
                 int s = ((1U << (sofs & 0x1F)) & f_p[sofs >> 5]) != 0;
@@ -432,7 +432,7 @@ void VM::_gbblt(int mode, void* des, int dofs, void* sou, int sofs, int sz)
                 sofs++;  dofs++; sz--;
             }
             break;
-        case bic:
+        case mode_bic:
             while (sz > 0)
             {
                 int s = ((1U << (sofs & 0x1F)) & f_p[sofs >> 5]);
@@ -441,7 +441,7 @@ void VM::_gbblt(int mode, void* des, int dofs, void* sou, int sofs, int sz)
                 sofs++;  dofs++; sz--;
             }
             break;
-        case or:
+        case mode_or:
             while (sz > 0)
             {
                 int s = ((1U << (sofs & 0x1F)) & f_p[sofs >> 5]) != 0;
@@ -457,23 +457,23 @@ void VM::_gbblt(int mode, void* des, int dofs, void* sou, int sofs, int sz)
 }
 
 
-dword VM::BBU(int adr, int i, int sz)
+DWORD VM::BBU(int adr, int i, int sz)
 {
-    qword q = *(qword*)(const byte*)&mem[adr + (i >> 5)];
+    uint64_t q = *(uint64_t*)(const uint8_t*)&mem[adr + (i >> 5)];
     q = q >> (i & 0x1F);
-    dword d = (dword)q;
+    DWORD d = (DWORD)q;
     return d & ((1 << sz) - 1);
 }
 
 
 void VM::BBP(int adr, int i, int sz, int j)
 {
-    dword wmask = (1U << sz) - 1;
-    qword  q = j & wmask;
-    qword mask = wmask;
+    DWORD wmask = (1U << sz) - 1;
+    uint64_t  q = j & wmask;
+    uint64_t mask = wmask;
     q = q << (i & 0x1F);
     mask = mask << (i & 0x1F);
-    qword* pq = (qword*)(const byte*)&mem[adr + (i >> 5)];
+    uint64_t* pq = (uint64_t*)(const uint8_t*)&mem[adr + (i >> 5)];
     *pq = (*pq & ~mask) | q;
 /*
 {
@@ -483,7 +483,7 @@ void VM::BBP(int adr, int i, int sz, int j)
         buf[k] = ((1U << k) & j) ? '1' : '0';
     }
 
-    dword* p = (dword*)pq;
+    DWORD* p = (DWORD*)pq;
     char buf1[33]; buf1[32] = 0;
     for (k = 0; k < 32; k++)
     {
@@ -504,12 +504,12 @@ void VM::BBP(int adr, int i, int sz, int j)
 
 
 static
-int _idiv(qlong x, qlong y, int& rem)
+int _idiv(int64_t x, int64_t y, int& rem)
 {
     assert(y != 0);
-    qlong z  = 0; 
-    qlong bt = 1;
-    while (qabs(x) > qabs(y))
+    int64_t z  = 0; 
+    int64_t bt = 1;
+    while (abs(x) > abs(y))
     {
         bt = bt << 1; 
         y  = y << 1;
@@ -716,7 +716,7 @@ void VM::Run()
             case 0x40:  {   int i = Pop(); 
                             int j = Pop();
                             int s = mem[j + i / 4]; 
-                            Push(((byte*)&s)[i % 4]);
+                            Push(((uint8_t*)&s)[i % 4]);
                             break;
                         }
 
@@ -735,7 +735,7 @@ void VM::Run()
                 int i = Pop(); 
                 int j = Pop();
                 int s = mem[j + i / 4]; 
-                ((byte*)&s)[i % 4] = (byte)k;
+                ((uint8_t*)&s)[i % 4] = (uint8_t)k;
                 mem[j + i / 4] = s;
                 break;
             }
@@ -843,10 +843,10 @@ void VM::Run()
             }
 
             case 0x8E: // ROL  word ROtate Left  
-            {   dword i = dword(Pop()) & 0x1F;
+            {   DWORD i = DWORD(Pop()) & 0x1F;
                 if (i != 0)
                 {
-                    dword j = (dword)Pop();
+                    DWORD j = (DWORD)Pop();
                     Push((j << i) | (j >> (32-i)));
                 }
                 break;
@@ -854,10 +854,10 @@ void VM::Run()
 
             case 0x8F: // ROR  word ROtate Right 
             {   
-                dword i = dword(Pop()) & 0x1F;
+                DWORD i = DWORD(Pop()) & 0x1F;
                 if (i != 0)
                 {
-                    dword j = (dword)Pop();
+                    DWORD j = (DWORD)Pop();
                     Push((j >> i) | (j << (32-i)));
                 }
                 break;
@@ -914,7 +914,7 @@ void VM::Run()
                 }
                 else if (sz > 0)
                 {
-                    memcpy((byte*)&mem[t], (byte*)&mem[f], sz*4);
+                    memcpy((uint8_t*)&mem[t], (uint8_t*)&mem[f], sz*4);
                 }
                 break;
             }
@@ -1126,7 +1126,7 @@ void VM::Run()
                     int low = Pop(); 
                     int adr = Pop();
                     int j = Next2() + PC;
-                    if (i == 0 && low <= hi || i != 0 && low >= hi)
+                    if (((i == 0) && (low <= hi)) || ((i != 0) && (low >= hi)))
                     {
                         mem[adr] = low;
                         mem[S++] = adr;
@@ -1148,7 +1148,7 @@ void VM::Run()
                     sz -= 256;
                 int i = mem[adr]; 
                 i += sz;
-                if (sz >=0 && i > hi || sz <= 0 && i < hi)
+                if (((sz >= 0) && (i > hi)) || ((sz <= 0) && (i < hi)))
                     S -= 2;
                 else
                 {
@@ -1247,10 +1247,10 @@ void VM::Run()
             {
                 int i = Pop();
                 int j = Pop();
-                byte* pa = (byte*)&mem[i];
-                byte* pb = (byte*)&mem[j];
-                byte a = *pa++;
-                byte b = *pb++;
+                uint8_t* pa = (uint8_t*)&mem[i];
+                uint8_t* pb = (uint8_t*)&mem[j];
+                uint8_t a = *pa++;
+                uint8_t b = *pb++;
                 while (a == b && b != 0 && a != 0)
                 {
                     a = *pa++;
@@ -1373,7 +1373,7 @@ void VM::Run()
                     S--;
                     int i = mem[S];
                     Mark(G, true);
-                    int j = ((byte*)&i)[3];
+                    int j = ((uint8_t*)&i)[3];
                     i = i & 0xFFFFFF; // *{0..23};
                     G = mem[i];
                     F = mem[G];
@@ -1493,7 +1493,7 @@ void VM::Run()
                 int i = Next(); 
                 int j = Next(); 
                 i = mem[G - i - 1]; 
-                ((byte*)&i)[3] = (byte)j; 
+                ((uint8_t*)&i)[3] = (uint8_t)j; 
                 Push(i);
                 break;
             }
@@ -1649,11 +1649,13 @@ void VM::Run()
                     case 0: 
                     {
                         // str: ARRAY OF CHAR
-                        int len = Pop();
-                        unused(len);
-                        const byte* psz = (const byte*)&mem[Pop()];
+                        //int len = Pop();
+		        (void)Pop();
+		        //unused(len);
+		        const uint8_t* psz = (const uint8_t*)&mem[Pop()];
+		        //psz[len] = 0;
                         printf("%s\n", psz);
-                        trace("%s\n", psz);
+                        //trace("%s\n", psz);
                         break;
                     }
                     default:
@@ -1684,7 +1686,7 @@ void VM::Run()
             {
                 int i = Pop();
                 printf("%08X\n", i);
-                trace("%08X\n", i);
+                //trace("%08X\n", i);
                 break;
             }
 
@@ -1696,9 +1698,9 @@ void VM::Run()
                 Ipt = 0x7;
                 break;
         }
-        if (Ipt == 0 && S > H || S == 0)
+        if (((Ipt == 0) && (S > H)) || (S == 0))
         {
-            _asm int 3
+            //_asm int 3
         }
     }
     SaveRegisters();
@@ -1721,7 +1723,7 @@ void VM::IO(int no)
                 Push(s->inp(adr));
             else
             {
-                trace("INP %03X ???\n", adr);
+                //trace("INP %03X ???\n", adr);
                 Ipt = 3; Push(0);
             }
             break;
@@ -1740,7 +1742,7 @@ void VM::IO(int no)
                 s->out(adr, i);
             else
             {
-                trace("OUT %03X %08X ???\n", adr, i); 
+                //trace("OUT %03X %08X ???\n", adr, i); 
                 Ipt = 3;
             }
             break;
@@ -1766,13 +1768,13 @@ void VM::IO(int no)
 
         case 0x4:
             {
-                trace("io 0x94\n");
+                //trace("io 0x94\n");
                 Ipt = 7;  PC -= 2;
                 break;
             }
         default:
             {
-                trace("unsupported i/o function %03X\n", no);
+                //trace("unsupported i/o function %03X\n", no);
                 Ipt = 7;  PC -= 2;
                 break;
             }
@@ -1790,7 +1792,7 @@ void VM::Quote(int op)
                     Ipt = 0x4C;
                 else
                 {
-                    sp--; AStack[sp-1] = dword(AStack[sp-1]) >> dword(AStack[sp]);
+                    sp--; AStack[sp-1] = DWORD(AStack[sp-1]) >> DWORD(AStack[sp]);
                 }
                 break;
         case 1: // QUOT
@@ -1980,7 +1982,7 @@ bool VM::DebugMonitor(int& a)
             printf(" /\n\n");
             a = mem[a];
         }
-        else if (ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'f') 
+        else if ( ((ch >= '0') && (ch <= '9')) || ((ch >= 'a') && (ch <= 'f'))) 
             digits(a, ch);
         else
             printf("%c ???\n", ch);
@@ -2000,8 +2002,8 @@ void VM::printf(const char* fmt, ...)
     char buf[1024];
     va_list vl;
     va_start(vl, fmt); 
-    wvsprintf(buf, fmt, vl);
-
+    wvsprintf(buf, fmt, va_arg(vl, char *));
+    va_end(vl);
     con->write(buf, strlen(buf));
 }
 
@@ -2033,11 +2035,11 @@ int VM::DiskOperation(int op, int dsk, int sec, int adr, int len)
                 }
                 return 1;
         case 8: // getspecs
-                return Disks.GetSpecs(dsk, (Request*)(byte*)&mem[adr]);
+                return Disks.GetSpecs(dsk, (Request*)(uint8_t*)&mem[adr]);
         case 9: // setspecs
-                return Disks.SetSpecs(dsk, (Request*)(byte*)&mem[adr]);
+                return Disks.SetSpecs(dsk, (Request*)(uint8_t*)&mem[adr]);
         default:
-                trace("invalid disk operation: %d\n", op);
+                //trace("invalid disk operation: %d\n", op);
                 return 0;
     }
 }
@@ -2064,7 +2066,7 @@ void VM::BMG(int op)
                     int len = Pop();
                     int y = Pop();
                     int x = Pop();
-                    Bitmap* bmp = (Bitmap*)(byte*)&mem[Pop()];
+                    Bitmap* bmp = (Bitmap*)(uint8_t*)&mem[Pop()];
                     int mode = Pop();
                     vline(mode, bmp, x, y, len);
                     break;
@@ -2083,10 +2085,10 @@ void VM::BMG(int op)
 
         case 3: { // display character
                     int ch  = Pop();
-                    Font* font = (Font*)(byte*)&mem[Pop()];
+                    Font* font = (Font*)(uint8_t*)&mem[Pop()];
                     int y = Pop();
                     int x = Pop();
-                    Bitmap* bmp = (Bitmap*)(byte*)&mem[Pop()];
+                    Bitmap* bmp = (Bitmap*)(uint8_t*)&mem[Pop()];
                     int mode = Pop();
                     dch(mode, bmp, x, y, font, ch);
                     break;
@@ -2095,7 +2097,7 @@ void VM::BMG(int op)
         case 4: { // clip
                     int h = Pop();
                     int w = Pop();
-                    Clip* clp = (Clip*)(byte*)&mem[Pop()];
+                    Clip* clp = (Clip*)(uint8_t*)&mem[Pop()];
                     Push(clip(clp, w, h));
                     break;
                 }
@@ -2106,7 +2108,7 @@ void VM::BMG(int op)
                     int x1 = Pop();
                     int y = Pop();
                     int x = Pop();
-                    Bitmap* bmp = (Bitmap*)(byte*)&mem[Pop()];
+                    Bitmap* bmp = (Bitmap*)(uint8_t*)&mem[Pop()];
                     int mode = Pop();
                     line(mode, bmp, x, y, x1, y1);
                     break;
@@ -2115,16 +2117,16 @@ void VM::BMG(int op)
         case 6: { // circle
                     int y = Pop();
                     int x = Pop();
-                    Circle* ctx = (Circle*)(byte*)&mem[Pop()];
-                    Bitmap* bmp = (Bitmap*)(byte*)&mem[Pop()];
+                    Circle* ctx = (Circle*)(uint8_t*)&mem[Pop()];
+                    Bitmap* bmp = (Bitmap*)(uint8_t*)&mem[Pop()];
                     int mode = Pop();
                     circle(mode, bmp, ctx, x, y);
                     break;
                 }
 
         case 7: { // arc
-                    ArcCtx* ctx = (ArcCtx*)(byte*)&mem[Pop()];
-                    Bitmap* bmp = (Bitmap*)(byte*)&mem[Pop()];
+                    ArcCtx* ctx = (ArcCtx*)(uint8_t*)&mem[Pop()];
+                    Bitmap* bmp = (Bitmap*)(uint8_t*)&mem[Pop()];
                     int mode = Pop();
                     arc(mode, bmp, ctx);
                     break;
@@ -2132,12 +2134,12 @@ void VM::BMG(int op)
 
 
         case 8: { // filled triangle
-                    TriangleFilled* ctx = (TriangleFilled*)(byte*)&mem[Pop()];
+                    TriangleFilled* ctx = (TriangleFilled*)(uint8_t*)&mem[Pop()];
                     trif(ctx);
                     break;
                 }
         case 9: { // filled circle
-                    CircleFilled* ctx = (CircleFilled*)(byte*)&mem[Pop()];
+                    CircleFilled* ctx = (CircleFilled*)(uint8_t*)&mem[Pop()];
                     circlef(ctx);
                     break;
                 }
@@ -2152,36 +2154,36 @@ void VM::dch(int mode, Bitmap* bmp, int x, int y, Font* font, int ch)
     ch = ch % 256;
     int w = font->w % 32;
     int h = font->h % 64;
-    dword test = mem[font->base + ch * h]
-            ||   mem[font->base + ch + 1 * h];
-    unused(test);
-    dword* F = (dword*)(byte*)&mem[font->base + ch * h];
-    dword* L = (dword*)(byte*)&mem[bmp->base + y * bmp->wpl + (x >> 5)];
+    //DWORD test = mem[font->base + ch * h]
+    //        ||   mem[font->base + ch + 1 * h];
+    //unused(test);
+    DWORD* F = (DWORD*)(uint8_t*)&mem[font->base + ch * h];
+    DWORD* L = (DWORD*)(uint8_t*)&mem[bmp->base + y * bmp->wpl + (x >> 5)];
 
     int x32 = x % 32;
 //  trace(">dch(%d,%d ch=%d font+h*ch=0x%08X) w=%d, h=%d base=0x%08X\n", x, y, ch, F, w, h, font->base);
-    dword wMask = ((1U << w) - 1);
-    qword qMaskX32 = qword(wMask) << x32;
-    dword  qFInverse = mode & 4 ? dword(-1) : 0;
+    DWORD wMask = ((1U << w) - 1);
+    uint64_t qMaskX32 = uint64_t(wMask) << x32;
+    DWORD  qFInverse = mode & 4 ? DWORD(-1) : 0;
     mode &= 3;
     for (int i = 0; i < h; i++)
     {
-        qword* Q = (qword*)L;
-        qword  qL = *Q;
-        qword  qF = (*F ^ qFInverse) & wMask;
+        uint64_t* Q = (uint64_t*)L;
+        uint64_t  qL = *Q;
+        uint64_t  qF = (*F ^ qFInverse) & wMask;
         qF = qF << x32;
         switch (mode)
         {
-            case rep: 
+            case mode_rep: 
                 *Q = (qL & ~qMaskX32) | qF;
                 break;
-            case xor:
+            case mode_xor:
                 *Q = qL ^ qF;
                 break;
-            case bic:
+            case mode_bic:
                 *Q = qL & ~qF;
                 break;
-            case or:
+            case mode_or:
                 *Q = qL | qF;
                 break;
         }
@@ -2213,16 +2215,16 @@ void VM::vline(int mode, Bitmap* bmp, int x, int y0, int len)
     {
         switch (mode)
         {
-            case rep: 
+            case mode_rep: 
                 mem[a] = (mem[a] & ~bit) | bit;
                 break;
-            case xor:
+            case mode_xor:
                 mem[a] = (mem[a] ^ bit);
                 break;
-            case bic:
+            case mode_bic:
                 mem[a] = (mem[a] & ~bit);
                 break;
-            case or:
+            case mode_or:
                 mem[a] = (mem[a] | bit);
                 break;
         }
@@ -2260,23 +2262,23 @@ void VM::hline(int mode, Bitmap* bmp, int x, int y, int x1)
         dot(mode, bmp, x, y); 
         return;
     }
-    _gbblt(mode, (byte*)&mem[bmp->base + y * bmp->wpl], x, &lnFF, x, len);
+    _gbblt(mode, (uint8_t*)&mem[bmp->base + y * bmp->wpl], x, &lnFF, x, len);
 }
 
 
 void VM::gbblt(int mode, int des, int dofs, int sou, int sofs, int bits)
 {
-    dword  test = mem[des] 
-                | mem[sou]
-                | mem[des + ((dofs + bits + 31) >> 5)]
-                | mem[sou + ((sofs + bits + 31) >> 5)];
-    unused(test);
+    //DWORD  test = mem[des] 
+    //            | mem[sou]
+    //            | mem[des + ((dofs + bits + 31) >> 5)]
+    //            | mem[sou + ((sofs + bits + 31) >> 5)];
+    //unused(test);
     if (mem.OutOfRange())
     {
         Ipt = 3;
         return;
     }
-    _gbblt(mode, (byte*)&mem[des], dofs, (byte*)&mem[sou], sofs, bits);
+    _gbblt(mode, (uint8_t*)&mem[des], dofs, (uint8_t*)&mem[sou], sofs, bits);
 }
 
 
@@ -2315,7 +2317,7 @@ int VM::clip(Clip* ctx, int w, int h)
             if (inrect(x2, y2, w-1, h-1))
                 break;
             // check out of clipping area:
-            if (x0 == x2 && y0 == y2 || x1 == x2 && y1==y2) 
+            if (((x0 == x2) && (y0 == y2)) || ((x1 == x2) && (y1==y2))) 
                 return false;
             if ((x2 < 0) == (x0 < 0) || (y2 < 0) == (y0 < 0)) // !!!!!! ERROR!
             {
@@ -2338,7 +2340,7 @@ int VM::clip(Clip* ctx, int w, int h)
         {
             int xC = (x0 + x) / 2; 
             int yC = (y0 + y) / 2;
-            if  (xC == x0 && yC == y0 || xC == x && yC == y)
+            if  (((xC == x0) && (yC == y0)) || ((xC == x) && (yC == y)))
                 break;
             if (inrect(xC, yC, w-1, h-1))
             {
@@ -2362,7 +2364,7 @@ int VM::clip(Clip* ctx, int w, int h)
         {
             int xC = (x1 + x) / 2; 
             int yC = (y1 + y) / 2;
-            if (xC == x1 && yC ==y1 || xC == x && yC == y)
+            if (((xC == x1) && (yC == y1)) || ((xC == x) && (yC == y)))
                 break;
             if (inrect(xC, yC, w-1, h-1))
             {
@@ -2474,7 +2476,7 @@ void VM::drawclipedline(int mode, Bitmap* bmp, int x0, int y0, int x1, int y1, i
             if (inrect(x2, y2, w-1, h-1))
                 break;
             // check out of clipping area:
-            if (x0 == x2 && y0 == y2 || x1 == x2 && y1==y2) 
+            if (((x0 == x2) && (y0 == y2)) || ((x1 == x2) && (y1==y2))) 
                 return;
             if ( (x2<0) == (x0<0) || (y2<0) == (y0<0)) // !!!!!! ERROR!
             {
@@ -2497,7 +2499,7 @@ void VM::drawclipedline(int mode, Bitmap* bmp, int x0, int y0, int x1, int y1, i
         {
             int xC = (x0 + x) / 2; 
             int yC = (y0 + y) / 2;
-            if  (xC == x0 && yC == y0 || xC == x && yC == y)
+            if  (((xC == x0) && (yC == y0)) || ((xC == x) && (yC == y)))
                 break;
             if (inrect(xC, yC, w-1, h-1))
             {
@@ -2521,7 +2523,7 @@ void VM::drawclipedline(int mode, Bitmap* bmp, int x0, int y0, int x1, int y1, i
         {
             int xC = (x1 + x) / 2; 
             int yC = (y1 + y) / 2;
-            if (xC == x1 && yC ==y1 || xC == x && yC == y)
+            if (((xC == x1) && (yC == y1)) || ((xC == x) && (yC == y)))
                 break;
             if (inrect(xC, yC, w-1, h-1))
             {
@@ -2701,17 +2703,7 @@ void VM::circlef(CircleFilled *pCtx)
     }
 }
 
-// xxx - delete me when circle, circlef and arc are implemented
-#pragma warning(disable: 4100) // unreferenced formal parameter
-
 void VM::arc(int mode, Bitmap* bmp, ArcCtx* ctx)
 {
     // xxx
 }
-
-// xxx - delete me when circle, circlef and arc are implemented
-#pragma warning(default: 4100) // unreferenced formal parameter
-
-
-//
-/////////////////////////////////////////////////////////////////

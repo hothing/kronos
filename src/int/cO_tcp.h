@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+#include <windows.h>
+#include <winsock2.h>
+
 #include "SIO.h"
 
 
@@ -15,22 +18,22 @@ public:
     virtual void writeChar(char ch);
     virtual void onKey(bool, int, int, int) {}
 
-    int connect(dword socket);
-    int connected();
+    bool connect(SOCKET socket);
+    bool connected();
 
     cO_tcp();
     virtual ~cO_tcp();
 private:
-    uint32_t so;
+    SOCKET so;
     char chInput;
 
     // network reader thread:-
-    uint32_t tcpReader();
+    DWORD tcpReader();
     HANDLE thread;
     HANDLE go;
     bool reading;
 
-    static uint32_t __stdcall tcpWorker(void *pv);
+    static DWORD __stdcall tcpWorker(void *pv);
 };
 
 #endif //_CO_TCP_H

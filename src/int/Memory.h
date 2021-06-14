@@ -12,7 +12,7 @@
 
 #include <cstdint>
 
-#define K (1024)
+#define KiB (1024)
 
 class IGD480;
 
@@ -69,9 +69,7 @@ private:
 };
 
 
-inline MEMORY::reference::reference(int* ptr, MEMORY* m) : 
-    mem(*m),
-    p(ptr)
+inline MEMORY::reference::reference(int* ptr, MEMORY* m) :  p(ptr), mem(*m)    
 {
 }
 

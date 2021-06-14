@@ -6,8 +6,16 @@ project Kronos_VM is
    for Languages use ("C++");
 
    package Naming is
-      for Spec_Suffix ("C++") use ".h";
+      for Spec_Suffix ("c++") use ".h";
    end Naming;
+
+   package Compiler is
+      for Switches ("c++") use ("-std=c++11", "-I/usr/include/wine/wine/windows", "-Wall", "-g");
+   end Compiler;
+
+   package Linker is
+      for Switches ("c++") use ("-g");
+   end Linker;
 
 end Kronos_VM;
 

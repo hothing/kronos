@@ -1,4 +1,10 @@
+#include <cstddef>
+#include <cstring>
+#include <cstdint>
+#include <cstdio>
+
 #include "cO_win32_display.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -68,14 +74,15 @@ cO_win32_display::cO_win32_display() :
     // 21866 - koi8-U (Ukranian)
     // 28595 - ISO Cyrillic
 
-    dword cp = ::GetConsoleOutputCP();
+    // UINT cp = ::GetConsoleOutputCP();
 //  trace("::GetConsoleOutputCP()=%d\n", cp);
-    BOOL b = ::SetConsoleOutputCP(866);
+    // BOOL b = ::SetConsoleOutputCP(866);
 //  trace("::SetConsoleOutputCP(866)=%d\n", b);
-    cp = ::GetConsoleCP();
+    //(void)::GetConsoleCP();
 //  trace("::GetConsoleCP()=%d\n", cp);
-    b = ::SetConsoleCP(20866);
-
+    if (! (::SetConsoleCP(20866))) {
+       fprintf(stderr, "Codepage KOI8-R cannot be set");
+    }
     SMALL_RECT win;
     win.Top = 0;
     win.Left = 0;
@@ -100,14 +107,14 @@ cO_win32_display::~cO_win32_display()
 void cO_win32_display::EraseChars(int n)
 {
     COORD c = cord;
-    dword nWritten = 0;
+    DWORD nWritten = 0;
     FillConsoleOutputCharacterA(stdOut, ' ', n, c, &nWritten);
     FillConsoleOutputAttribute(stdOut, (WORD)(FOREGROUND_GREEN), n, c, &nWritten);
 }
 
 void cO_win32_display::EraseLine()
 {
-    dword nWritten = 0;
+    DWORD nWritten = 0;
     FillConsoleOutputCharacterA(stdOut, ' ', W - cord.X, cord, &nWritten);
     FillConsoleOutputAttribute(stdOut, (WORD)(FOREGROUND_GREEN), W - cord.X, cord, &nWritten);
 }
@@ -212,7 +219,7 @@ void cO_win32_display::writeChar(char ch)
     bool bSetPos = false;
     if (ch != 033 && !bInEsc)
     {
-        dword nWritten = 0;
+        DWORD nWritten = 0;
         WriteConsole(stdOut, &tr[(byte)ch], 1, &nWritten, NULL);
         if (ch == '\r')
             cord.X = 0;
@@ -369,7 +376,7 @@ void cO_win32_display::writeChar(char ch)
 
                 default:
                     // only digits separated by ';' allowed (at least in the subset we support):
-                    bInEsc = (ch >= '0' && ch <= '9' || ch == ';');
+                    bInEsc = ((ch >= '0' && ch <= '9') || ch == ';');
                     bSetPos = false;
                     break;
                 }

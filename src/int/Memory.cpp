@@ -1,4 +1,5 @@
 #include <cassert>
+#include <windows.h>
 
 #include "Memory.h"
 
@@ -20,7 +21,7 @@ MEMORY::MEMORY(int nMemorySizeBytes) :
     assert(pReservered == (uint8_t*)data);
 //  trace("Memory: %08x\n", data);
 
-    void* pIGDregisters = ::VirtualAlloc(pReservered + IGD480base*4, 4*K, MEM_COMMIT,  PAGE_READWRITE);
+    void* pIGDregisters = ::VirtualAlloc(pReservered + IGD480base*4, 4*KiB, MEM_COMMIT,  PAGE_READWRITE);
     assert(pIGDregisters == pReservered  + IGD480base*4);
     (void)pIGDregisters;
 

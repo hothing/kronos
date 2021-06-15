@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstring>
 
-//#include <winsock2.h>
+#include <winsock2.h>
 #include "SIO_TCP.h"
 #include "cO_tcp.h"
 

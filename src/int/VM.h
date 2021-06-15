@@ -79,9 +79,9 @@ private:
     void FPU();
     void Quote(int op);
 
-    void bitBlt(DWORD * dst, int dofs, DWORD * src, int sofs, int bits);
-    void BitBlt(DWORD  dst, int dofs, DWORD  src, int sofs, int bits);
-    void BitMove(int t, int t_o, int f, int f_o, int sz);
+    void bitBlt(uint32_t * dst, uint32_t dofs, uint32_t * src, uint32_t sofs, uint32_t bits);
+    void BitBlt(uint32_t  dst, uint32_t dofs, uint32_t src, uint32_t sofs, uint32_t bits);
+    void BitMove(uint32_t t, uint32_t t_o, uint32_t f, uint32_t f_o, uint32_t sz);
     DWORD BBU(int adr, int i, int sz);
     void  BBP(int adr, int i, int sz, int j);
 
